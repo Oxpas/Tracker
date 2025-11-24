@@ -4,11 +4,9 @@
 //
 //  Created by Николай Замараев on 24.10.2025.
 //
-
-import Foundation
 import UIKit
 
-class StatisticViewController: UIViewController {
+final class StatisticViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()

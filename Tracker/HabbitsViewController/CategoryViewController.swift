@@ -4,8 +4,6 @@
 //
 //  Created by Николай Замараев on 01.11.2025.
 //
-
-import Foundation
 import UIKit
 
 protocol CategorySelectionDelegate: AnyObject {

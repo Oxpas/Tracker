@@ -4,8 +4,6 @@
 //
 //  Created by Николай Замараев on 26.10.2025.
 //
-
-import Foundation
 import UIKit
 
 final class TrackerCell: UICollectionViewCell {
@@ -25,12 +23,8 @@ final class TrackerCell: UICollectionViewCell {
     private lazy var name: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
-//        label.textAlignment = .center
         label.textColor = .white
-//        label.layer.cornerRadius = 12
         label.translatesAutoresizingMaskIntoConstraints = false
-//        label.clipsToBounds = true
-//        label.backgroundColor = UIColor.white.withAlphaComponent(0.3)
         label.numberOfLines = 2
         
         return label

@@ -4,8 +4,6 @@
 //
 //  Created by Николай Замараев on 26.10.2025.
 //
-
-import Foundation
 import UIKit
 
 protocol CreateTrackerViewControllerDelegate: AnyObject {
@@ -180,13 +178,13 @@ final class HabbitsViewController: UIViewController {
         ])
     }
     
-    @objc func textChanged() {
+    @objc private func textChanged() {
         updateClearButtonVisible()
         overTextLength()
         updateCreateButtonEnable()
     }
     
-    @objc func clearText() {
+    @objc private func clearText() {
         trackerName.text = ""
         textChanged()
         
@@ -238,7 +236,7 @@ final class HabbitsViewController: UIViewController {
                                  emoji: "💻")
         
         delegate?.didCreateNewTracker(newTracker, titleCategory: selectedCategory)
-        presentingViewController?.dismiss(animated: true)
+        dismiss(animated: true)
     }
     
     private func updateCreateButtonEnable() {

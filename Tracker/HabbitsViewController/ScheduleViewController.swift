@@ -4,8 +4,6 @@
 //
 //  Created by Николай Замараев on 28.10.2025.
 //
-
-import Foundation
 import UIKit
 
 protocol ScheduleSelectionDelegate: AnyObject {

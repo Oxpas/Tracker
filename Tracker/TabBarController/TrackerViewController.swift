@@ -4,11 +4,9 @@
 //
 //  Created by Николай Замараев on 24.10.2025.
 //
-
-import Foundation
 import UIKit
 
-class TrackerViewController: UIViewController {
+final class TrackerViewController: UIViewController {
     
     private var categories: [TrackerCategory] = []
     private var completedTrackers: Set<TrackerRecord> = []
@@ -258,6 +256,7 @@ class TrackerViewController: UIViewController {
     
     @objc func addTrackerButtonTapped() {
         let habbitsViewController = HabbitsViewController()
+        habbitsViewController.delegate = self
         let navigationController = UINavigationController(rootViewController: habbitsViewController)
         present(navigationController, animated: true)
     }

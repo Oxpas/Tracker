@@ -4,10 +4,9 @@
 //
 //  Created by Николай Замараев on 24.10.2025.
 //
-
 import UIKit
 
-class TabBarController: UITabBarController {
+final class TabBarController: UITabBarController {
     
     override func viewDidLoad() {
         super.viewDidLoad()

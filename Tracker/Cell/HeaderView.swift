@@ -4,8 +4,6 @@
 //
 //  Created by Николай Замараев on 02.11.2025.
 //
-
-import Foundation
 import UIKit
 
 final class HeaderView: UICollectionReusableView {
@@ -23,7 +21,7 @@ final class HeaderView: UICollectionReusableView {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func setupUI() {
