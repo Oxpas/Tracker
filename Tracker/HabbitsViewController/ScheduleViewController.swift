@@ -101,11 +101,12 @@ extension ScheduleViewController: UITableViewDelegate, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "weekdaysCell", for: indexPath)
         let weekdays = Weekdays.allCases[indexPath.row]
         
-        cell.textLabel?.text = weekdays.namesOfWeekdays
+        cell.textLabel?.text = weekdays.rawValue
         cell.textLabel?.textAlignment = .left
         cell.backgroundColor = UIColor(named: "YP Background")
         
         let switchButton = UISwitch()
+        switchButton.onTintColor = .red
         switchButton.isOn = selectedDays.contains(weekdays)
         
         switchButton.addAction(UIAction { [weak self] _ in

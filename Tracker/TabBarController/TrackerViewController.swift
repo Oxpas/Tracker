@@ -8,6 +8,9 @@ import UIKit
 
 final class TrackerViewController: UIViewController {
     
+    var trackerStore: TrackerStore?
+    var trackerRecordStore: TrackerRecordStore?
+    
     private var categories: [TrackerCategory] = []
     private var completedTrackers: Set<TrackerRecord> = []
     private var visibleCategories: [TrackerCategory] = []
@@ -104,9 +107,13 @@ final class TrackerViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupNavigationBar()
-        placeholderVisible()
-        createMockData()
+        
+        trackerStore?.delegate = self
+        
+        loadData()
         reloadData()
+        
+        placeholderVisible()
         
         
         search.delegate = self
@@ -167,21 +174,15 @@ final class TrackerViewController: UIViewController {
         ])
     }
     
+    private func loadData() {
+        guard let trackerRecordStore = trackerRecordStore else {return}
+        completedTrackers = trackerRecordStore.fetchCompletedTrackers()
+    }
+    
     private func reloadData() {
+        guard let trackerStore = trackerStore else {return}
         let selectedDate = datePicker.date
-        let weekdaysFilter = Calendar.current.component(.weekday, from: selectedDate)
-        
-        visibleCategories = categories.map { category in
-            let filteredTrackers = category.trackers.filter { tracker in
-                tracker.schedule.contains { weekday in
-                    weekday.number == weekdaysFilter
-                }
-            }
-            return TrackerCategory(title: category.title, trackers: filteredTrackers)
-        }.filter { !$0.trackers.isEmpty }
-        
-        
-        
+        visibleCategories = trackerStore.fetchTrackers(for: selectedDate)
         collectionView.reloadData()
         placeholderVisible()
     }
@@ -199,14 +200,18 @@ final class TrackerViewController: UIViewController {
         let selectedDate = datePicker.date
         let normalizedSelectedDate = calendar.startOfDay(for: selectedDate)
         
-        if let record = completedTrackers.first(where: {
-            $0.trackerID == trackerID && calendar.isDate($0.date, inSameDayAs: normalizedSelectedDate)
-        }) {
-            completedTrackers.remove(record)
+        guard let trackerRecordStore = trackerRecordStore else { return }
+        
+        do {
+            try trackerRecordStore.removeRecord(for: trackerID, date: normalizedSelectedDate)
+            completedTrackers = trackerRecordStore.fetchCompletedTrackers()
             
             if let indexPath = findIndexPathForTracker(with: trackerID) {
                 collectionView.reloadItems(at: [indexPath])
             }
+        } catch {
+            let nsError = error as NSError
+            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
     }
     
@@ -218,13 +223,19 @@ final class TrackerViewController: UIViewController {
         let normalizedSelectedDate = calendar.startOfDay(for: selectedDate)
         let normalizedDay = calendar.startOfDay(for: today)
         
-        guard normalizedSelectedDate <= normalizedDay else { return }
+        guard normalizedSelectedDate <= normalizedDay,
+              let trackerRecordStore = trackerRecordStore else { return }
         
-        let newRecord = TrackerRecord(trackerID: trackerID, date: normalizedSelectedDate)
-        completedTrackers.insert(newRecord)
-        
-        if let indexPath = findIndexPathForTracker(with: trackerID) {
-            collectionView.reloadItems(at: [indexPath])
+        do {
+            try trackerRecordStore.addRecord(for: trackerID, date: normalizedSelectedDate)
+            completedTrackers = trackerRecordStore.fetchCompletedTrackers()
+            
+            if let indexPath = findIndexPathForTracker(with: trackerID) {
+                collectionView.reloadItems(at: [indexPath])
+            }
+        } catch {
+            let nsError = error as NSError
+            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
     }
     
@@ -260,18 +271,6 @@ final class TrackerViewController: UIViewController {
         let navigationController = UINavigationController(rootViewController: habbitsViewController)
         present(navigationController, animated: true)
     }
-    
-    func createMockData() {
-        let mockTrackers = [
-            Tracker(id: UUID(), name: "Пить воду", color: .systemBlue, schedule: [.monday, .tuesday, .wednesday, .friday, .saturday, .sunday], emoji: "💧"),
-            Tracker(id: UUID(), name: "Бег", color: .systemGreen, schedule: [.monday, .wednesday, .friday], emoji: "🏃"),
-            Tracker(id: UUID(), name: "Чтение", color: .systemOrange, schedule: [.tuesday, .saturday], emoji: "📚")
-        ]
-        
-        categories = [TrackerCategory(title: "Здоровье", trackers: mockTrackers)]
-        reloadData()
-        placeholderVisible()
-    }
 }
 
 extension TrackerViewController: UISearchBarDelegate {
@@ -299,19 +298,12 @@ extension TrackerViewController: UISearchBarDelegate {
 
 extension TrackerViewController: CreateTrackerViewControllerDelegate {
     func didCreateNewTracker(_ tracker: Tracker, titleCategory: String) {
-        var newCategories = categories
-        
-        if let index = newCategories.firstIndex(where: { $0.title == titleCategory }) {
-            var updatedTrackers = newCategories[index].trackers
-            updatedTrackers.append(tracker)
-            newCategories[index] = TrackerCategory(title: titleCategory, trackers: updatedTrackers)
-        } else {
-            
-            let newCategory = TrackerCategory(title: titleCategory, trackers: [tracker])
-            newCategories.append(newCategory)
+        do {
+            try trackerStore?.createTracker(tracker, categoryTitle: titleCategory)
+            reloadData()
+        } catch {
+            print("Ошибка сохранения трекера: \(error)")
         }
-        categories = newCategories
-        reloadData()
         
         dismiss(animated: true)
     }
@@ -343,7 +335,6 @@ extension TrackerViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
-//TODO: - Доделать отображение таблицы
 extension TrackerViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         guard section < visibleCategories.count else { return 0}
@@ -401,6 +392,12 @@ extension TrackerViewController: UICollectionViewDataSource {
         
         header.configure(with: visibleCategories[indexPath.section].title)
         return header
+    }
+}
+
+extension TrackerViewController: TrackerStoreDelegate {
+    func didUpdateTrackers() {
+        reloadData()
     }
 }
 
