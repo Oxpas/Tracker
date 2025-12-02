@@ -38,7 +38,8 @@ final class TrackerCategoryStore {
             return results.first?.category?.title
         } catch {
             let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            assertionFailure("Unresolved error \(nsError), \(nsError.userInfo)")
+            return nil
         }
     }
     

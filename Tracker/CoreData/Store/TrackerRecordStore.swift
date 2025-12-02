@@ -62,7 +62,8 @@ final class TrackerRecordStore {
             return records
         } catch {
             let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            assertionFailure("Unresolved error \(nsError), \(nsError.userInfo)")
+            return []
         }
     }
     
@@ -97,7 +98,8 @@ final class TrackerRecordStore {
             return !results.isEmpty
         } catch {
             let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            assertionFailure("Unresolved error \(nsError), \(nsError.userInfo)")
+            return false
         }
     }
 }
