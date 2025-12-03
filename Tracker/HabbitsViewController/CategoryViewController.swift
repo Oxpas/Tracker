@@ -90,7 +90,6 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-       
         let selectedCategory = categories[indexPath.row]
         delegate?.didCategorySelect(selectedCategory)
         dismiss(animated: true)

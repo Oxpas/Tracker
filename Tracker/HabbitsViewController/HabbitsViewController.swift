@@ -480,15 +480,17 @@ extension HabbitsViewController: UICollectionViewDelegate, UICollectionViewDataS
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if collectionView == emojiCollectionView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as! EmojiCell
-            cell.emojiLabel.text = emojies[indexPath.item]
-            cell.setSelected(selectedEmojiIndex == indexPath.row)
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as? EmojiCell
+            cell?.emojiLabel.text = emojies[indexPath.item]
+            cell?.setSelected(selectedEmojiIndex == indexPath.row)
+            guard let cell else { return cell ?? UICollectionViewCell() }
             return cell
         } else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorCell", for: indexPath) as! ColorCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorCell", for: indexPath) as? ColorCell
             let color = colors[indexPath.item]
-            cell.configure(with: color)
-            cell.setSelected(selectedColorIndex == indexPath.item, with: color)
+            cell?.configure(with: color)
+            cell?.setSelected(selectedColorIndex == indexPath.item, with: color)
+            guard let cell else { return cell ?? UICollectionViewCell()}
             return cell
         }
     }
