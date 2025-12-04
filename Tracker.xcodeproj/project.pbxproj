@@ -40,6 +40,11 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		9593424B2ED9A90C006D9B1F /* AppSettings */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = AppSettings;
+			sourceTree = "<group>";
+		};
 		95E0D8232EAB2E11001C6894 /* Tracker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -88,6 +93,7 @@
 		95E0D8182EAB2E11001C6894 = {
 			isa = PBXGroup;
 			children = (
+				9593424B2ED9A90C006D9B1F /* AppSettings */,
 				95E0D8232EAB2E11001C6894 /* Tracker */,
 				95E0D83A2EAB2E13001C6894 /* TrackerTests */,
 				95E0D8442EAB2E13001C6894 /* TrackerUITests */,
@@ -121,6 +127,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				9593424B2ED9A90C006D9B1F /* AppSettings */,
 				95E0D8232EAB2E11001C6894 /* Tracker */,
 			);
 			name = Tracker;
