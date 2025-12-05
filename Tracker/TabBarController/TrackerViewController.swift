@@ -400,5 +400,3 @@ extension TrackerViewController: TrackerStoreDelegate {
         reloadData()
     }
 }
-
-
