@@ -40,7 +40,17 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             trackerVC.trackerRecordStore = trackerRecordStore
         }
         
-        window?.rootViewController = tabBarController
+        if UserDefaults.standard.object(forKey: "isFirstAppOpen") == nil {
+            AppSettings.isFirstAppOpen = true
+        }
+        
+        if AppSettings.isFirstAppOpen {
+            window?.rootViewController = OnboardingViewControllers()
+        } else {
+            let trackerVC = TrackerViewController()
+            window?.rootViewController = UINavigationController(rootViewController: trackerVC)
+        }
+        
         window?.makeKeyAndVisible()
     }
     

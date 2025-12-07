@@ -432,10 +432,15 @@ extension HabbitsViewController: UITableViewDelegate, UITableViewDataSource {
         
         switch indexPath.row {
         case 0:
-            print("Selected kategory cell")
+            print("Selected category cell")
             let categoryViewController = CategoryViewController()
+            let context = CoreDataStore.shared.viewContext
+            let trackerCategoryStore = TrackerCategoryStore(context: context)
             
+            categoryViewController.configure(trackerCategoryStore: trackerCategoryStore)
+            categoryViewController.initiallySelectedCategory = selectedCategory
             categoryViewController.delegate = self
+            
             let navigationController = UINavigationController(rootViewController: categoryViewController)
             present(navigationController, animated: true)
             

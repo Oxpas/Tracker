@@ -53,10 +53,7 @@ final class TrackerStore: NSObject {
     }
     
     func createTracker(_ tracker: Tracker, categoryTitle: String) throws {
-        print("🟢 Создаем трекер: \(tracker.name), категория: \(categoryTitle)")
-        
         guard context.persistentStoreCoordinator != nil else {
-            print("🔴 Ошибка: контекст Core Data не готов")
             throw NSError(domain: "TrackerStore", code: -1, userInfo: [NSLocalizedDescriptionKey: "Контекст Core Data не готов"])
         }
         
@@ -66,20 +63,13 @@ final class TrackerStore: NSObject {
         trackerCoreData.color = colorMarshalling.hexString(from: tracker.color)
         trackerCoreData.emoji = tracker.emoji
         
-        print("📝 Цвет сохранен как: \(colorMarshalling.hexString(from: tracker.color))")
-        
         let scheduleData = try? NSKeyedArchiver.archivedData(withRootObject: tracker.schedule.map { $0.rawValue }, requiringSecureCoding: false)
         trackerCoreData.schedule = scheduleData
         
-        print("📅 Расписание: \(tracker.schedule.map { $0.rawValue })")
-        
-        let category = try trackerCategoryStore.createCategory(with: categoryTitle)
+        let category = try trackerCategoryStore.fetchOrCreateCategory(with: categoryTitle)
         trackerCoreData.category = category
         
-        print("📂 Категория создана: \(categoryTitle)")
-        
         CoreDataStore.shared.saveContext()
-        print("💾 Трекер сохранен в Core Data")
     }
     
     func fetchTrackers() -> [Tracker] {
@@ -171,4 +161,8 @@ extension TrackerStore: NSFetchedResultsControllerDelegate {
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<any NSFetchRequestResult>) {
         delegate?.didUpdateTrackers()
     }
+}
+
+extension Notification.Name {
+    static let trackersDidUpdate = Notification.Name("trackersDidUpdate")
 }

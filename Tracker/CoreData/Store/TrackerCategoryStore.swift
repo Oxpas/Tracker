@@ -14,7 +14,7 @@ final class TrackerCategoryStore {
         self.context = context
     }
     
-    func createCategory(with title: String) throws -> TrackerCategoryCoreData {
+    func fetchOrCreateCategory(with title: String) throws -> TrackerCategoryCoreData {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "title == %@", title)
         
@@ -43,11 +43,24 @@ final class TrackerCategoryStore {
         }
     }
     
+    
     func fetchAllCategories() throws -> [String] {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
         let results = try context.fetch(fetchRequest)
         return results.compactMap { $0.title }
+    }
+    
+    func createCategory(with title: String) throws {
+        let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "title == %@", title)
+        
+        let existingCategories = try context.fetch(fetchRequest)
+        
+        let newCategory = TrackerCategoryCoreData(context: context)
+        newCategory.title = title
+        
+        try context.save()
     }
 }
