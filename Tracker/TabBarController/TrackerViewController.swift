@@ -110,6 +110,24 @@ final class TrackerViewController: UIViewController {
         
         trackerStore?.delegate = self
         
+        print("🎯 TrackerViewController загружен")
+        print("📊 trackerStore: \(String(describing: trackerStore))")
+        print("📊 trackerRecordStore: \(String(describing: trackerRecordStore))")
+        
+        if trackerStore == nil {
+            print("⚠️ ВНИМАНИЕ: trackerStore = nil!")
+            print("⚠️ Настраиваем через DataService...")
+            
+            // Автоматическая настройка, если забыли настроить извне
+            let dataService = DataService.shared
+            trackerStore = dataService.trackerStore
+            trackerRecordStore = dataService.trackerRecordStore
+            trackerStore?.delegate = self
+            
+            print("✅ Автонастройка завершена")
+            print("📊 trackerStore теперь: \(String(describing: trackerStore))")
+        }
+        
         loadData()
         reloadData()
         
@@ -179,12 +197,23 @@ final class TrackerViewController: UIViewController {
         completedTrackers = trackerRecordStore.fetchCompletedTrackers()
     }
     
-    private func reloadData() {
-        guard let trackerStore = trackerStore else {return}
-        let selectedDate = datePicker.date
-        visibleCategories = trackerStore.fetchTrackers(for: selectedDate)
-        collectionView.reloadData()
-        placeholderVisible()
+    @objc private func reloadData() {
+        print("🎯 TrackerViewController: получено уведомление или вызов делегата")
+            
+            guard let trackerStore = trackerStore else {
+                print("❌ trackerStore is nil!")
+                return
+            }
+            
+            let selectedDate = datePicker.date
+            print("📅 Загружаем трекеры для даты: \(selectedDate)")
+            
+            visibleCategories = trackerStore.fetchTrackers(for: selectedDate)
+            print("📊 Найдено категорий: \(visibleCategories.count)")
+            print("📊 Всего трекеров: \(visibleCategories.reduce(0) { $0 + $1.trackers.count })")
+            
+            collectionView.reloadData()
+            placeholderVisible()
     }
     
     private func isTrackerCompletedToday(_ trackerID: UUID) -> Bool {

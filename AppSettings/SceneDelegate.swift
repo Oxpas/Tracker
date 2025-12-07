@@ -50,6 +50,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let trackerVC = TrackerViewController()
             window?.rootViewController = UINavigationController(rootViewController: trackerVC)
         }
+        
         window?.makeKeyAndVisible()
     }
     
