@@ -6,16 +6,35 @@
 //
 import UIKit
 
+enum Mode {
+    case create
+    case edit(Tracker)
+}
+
 protocol CreateTrackerViewControllerDelegate: AnyObject {
     func didCreateNewTracker(_ tracker: Tracker, titleCategory: String)
+    func didEditTracker(_ tracker: Tracker, titleCategory: String)
 }
 
 final class HabbitsViewController: UIViewController {
     
     weak var delegate: CreateTrackerViewControllerDelegate?
     
+    
+    private let mode: Mode
+    
+    init(mode: Mode) {
+        self.mode = mode
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        nil
+    }
+    
     private var selectedEmojiIndex: Int?
     private var selectedColorIndex: Int?
+    private var completedDays: Int = 0
     
     private let emojies = [
         "🙂" ,"😻" ,"🌺" ,"🐶", "❤️", "😱",
@@ -49,7 +68,7 @@ final class HabbitsViewController: UIViewController {
         "Расписание"
     ]
     
-    private var selectedCategory: String?
+     var selectedCategory: String?
     private var selectedSchedule: [Weekdays] = []
     
     private lazy var newHabbitLabel: UILabel = {
@@ -58,6 +77,18 @@ final class HabbitsViewController: UIViewController {
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Новая привычка"
+        
+        return label
+    }()
+    
+    
+    private lazy var daysCount: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 32, weight: .bold)
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = ""
+        
         
         return label
     }()
@@ -100,6 +131,7 @@ final class HabbitsViewController: UIViewController {
         tableView.layer.cornerRadius = 16
         tableView.isScrollEnabled = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.separatorColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
         
         return tableView
     }()
@@ -126,7 +158,7 @@ final class HabbitsViewController: UIViewController {
         let button = UIButton(type: .system)
         
         button.setTitle("Создать", for: .normal)
-        button.backgroundColor = .ypGray
+        button.backgroundColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -218,12 +250,69 @@ final class HabbitsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor.systemBackground
         tableView.delegate = self
         tableView.dataSource = self
         
         setupUI()
+        uiModeSetup(self.mode)
         updateCreateButtonEnable()
+    }
+    
+    private func uiModeSetup(_ mode: Mode) {
+        switch mode {
+        case .create:
+            newHabbitLabel.text = "Новая привычка"
+            createButton.setTitle("Создать", for: .normal)
+            
+        case .edit(let tracker):
+            newHabbitLabel.text = "Редактирование привычки"
+            
+            createButton.setTitle("Сохранить", for: .normal)
+            
+            trackerName.text = tracker.name
+            
+            selectedSchedule = tracker.schedule
+            selectedEmojiIndex = emojies.firstIndex(of: tracker.emoji)
+            selectedColorIndex = colors.firstIndex(of: tracker.color)
+            
+            updateCompletedDaysCount(for: tracker.id)
+            
+            
+            tableView.reloadData()
+            emojiCollectionView.reloadData()
+            colorCollectionView.reloadData()
+        }
+    }
+    
+    private func updateCompletedDaysCount(for trackerId: UUID) {
+        let trackerRecordStore = TrackerRecordStore(context: CoreDataStore.shared.viewContext)
+        let count = trackerRecordStore.completedDaysCount(for: trackerId)
+        completedDays = count
+        updateDaysCountLabel()
+    }
+    
+    private func updateDaysCountLabel() {
+        let daysString = formatDaysString(completedDays)
+        daysCount.text = daysString
+    }
+    
+    private func formatDaysString(_ count: Int) -> String {
+        let lastDigit = count % 10
+        let lastTwoDigits = count % 100
+        
+        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
+            return "\(count) дней"
+        }
+        
+        switch lastDigit {
+        case 1:
+            return "\(count) день"
+        case 2, 3, 4:
+            return "\(count) дня"
+        default:
+            return "\(count) дней"
+        }
     }
     
     func setupUI() {
@@ -232,6 +321,7 @@ final class HabbitsViewController: UIViewController {
         view.addSubview(createButton)
         view.addSubview(scrollView)
         
+        scrollView.addSubview(daysCount)
         scrollView.addSubview(trackerName)
         scrollView.addSubview(tableView)
         scrollView.addSubview(clearButton)
@@ -240,6 +330,7 @@ final class HabbitsViewController: UIViewController {
         scrollView.addSubview(emojiCollectionView)
         scrollView.addSubview(colorLabel)
         scrollView.addSubview(colorCollectionView)
+        
         
         setupConstraints()
     }
@@ -254,7 +345,11 @@ final class HabbitsViewController: UIViewController {
             newHabbitLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -32),
             newHabbitLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            trackerName.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 24),
+            daysCount.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            daysCount.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            daysCount.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            
+            trackerName.topAnchor.constraint(equalTo: daysCount.bottomAnchor, constant: 24),
             trackerName.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 16),
             trackerName.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -16),
             trackerName.heightAnchor.constraint(equalToConstant: 75),
@@ -353,25 +448,47 @@ final class HabbitsViewController: UIViewController {
     }
     
     private func createTracker() {
-        guard let trackerName = trackerName.text,
-              !trackerName.isEmpty,
-              let selectedCategory,
-              !selectedCategory.isEmpty,
-              let emojiIndex = selectedEmojiIndex,
-              let colorIndex = selectedColorIndex
-        else { return }
+        let tracker =  Tracker(id: existingIDOrNew(),
+                               name: trackerName.text ?? "",
+                               color: colors[selectedColorIndex ?? 0],
+                               schedule: selectedSchedule,
+                               emoji: emojies[selectedEmojiIndex ?? 0])
         
-        let emoji = emojies[emojiIndex]
-        let color = colors[colorIndex]
+        switch mode {
+        case .create:
+            delegate?.didCreateNewTracker(tracker, titleCategory: selectedCategory ?? "")
+        case .edit:
+            delegate?.didEditTracker(tracker, titleCategory: selectedCategory ?? "")
+        }
         
-        let newTracker = Tracker(id: UUID(),
-                                 name: trackerName,
-                                 color: color,
-                                 schedule: selectedSchedule,
-                                 emoji: emoji)
-        
-        delegate?.didCreateNewTracker(newTracker, titleCategory: selectedCategory)
         dismiss(animated: true)
+//        guard let trackerName = trackerName.text,
+//              !trackerName.isEmpty,
+//              let selectedCategory,
+//              !selectedCategory.isEmpty,
+//              let emojiIndex = selectedEmojiIndex,
+//              let colorIndex = selectedColorIndex
+//        else { return }
+//        
+//        let emoji = emojies[emojiIndex]
+//        let color = colors[colorIndex]
+//        
+//        let newTracker = Tracker(id: UUID(),
+//                                 name: trackerName,
+//                                 color: color,
+//                                 schedule: selectedSchedule,
+//                                 emoji: emoji)
+//        
+//        delegate?.didCreateNewTracker(newTracker, titleCategory: selectedCategory)
+//        dismiss(animated: true)
+    }
+    
+    private func existingIDOrNew() -> UUID {
+        if case let .edit(oldTracker) = mode {
+            return oldTracker.id
+        } else {
+            return UUID()
+        }
     }
     
     private func updateCreateButtonEnable() {
@@ -396,7 +513,7 @@ extension HabbitsViewController: UITableViewDelegate, UITableViewDataSource {
         
         cell.textLabel?.text = cellData[indexPath.row]
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17)
-        cell.textLabel?.textColor = UIColor(named: "YP BlackDay")
+        cell.textLabel?.textColor = UIColor.label
         cell.backgroundColor = UIColor(named: "YP Background")
         
         if indexPath.row == 1, !selectedSchedule.isEmpty {
@@ -414,6 +531,7 @@ extension HabbitsViewController: UITableViewDelegate, UITableViewDataSource {
         
         if indexPath.row == 0 {
             cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+            
         } else {
             cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: .greatestFiniteMagnitude)
         }

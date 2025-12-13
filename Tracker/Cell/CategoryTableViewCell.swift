@@ -49,6 +49,7 @@ final class CategoryTableViewCell: UITableViewCell {
     
     func configure(with title: String) {
         titleLabel.text = title
+        titleLabel.textColor = UIColor.label
     }
     
     func setSelected(_ isSelected: Bool) {

@@ -21,7 +21,7 @@ final class TabBarController: UITabBarController {
         configureTrackerViewController(firstVC)
         
         firstVC.tabBarItem = UITabBarItem(
-            title: "Трекеры",
+            title: NSLocalizedString("trackers_tab", comment: "TabBarController"),
             image: UIImage(systemName: "record.circle.fill"),
             selectedImage: UIImage(systemName: "record.circle.fill")
         )
@@ -29,7 +29,7 @@ final class TabBarController: UITabBarController {
         // 3. Создаем второй экран
         let secondVC = StatisticViewController()
         secondVC.tabBarItem = UITabBarItem(
-            title: "Статистика",
+            title: NSLocalizedString("statistics_tab", comment: "TabBarController"),
             image: UIImage(systemName: "hare.fill"),
             selectedImage: UIImage(systemName: "hare.fill")
         )
@@ -46,9 +46,9 @@ final class TabBarController: UITabBarController {
     
     private func setupTabBarAppearance() {
         // Настройка внешнего вида TabBar
-        tabBar.tintColor = .systemBlue
+        tabBar.tintColor = .systemRed
         tabBar.unselectedItemTintColor = .gray
-        tabBar.backgroundColor = .white
+        tabBar.backgroundColor = UIColor.systemBackground
         tabBar.backgroundImage = UIImage()
         tabBar.shadowImage = UIImage()
         tabBar.isTranslucent = false

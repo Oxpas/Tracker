@@ -47,8 +47,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         if AppSettings.isFirstAppOpen {
             window?.rootViewController = OnboardingViewControllers()
         } else {
-            let trackerVC = TrackerViewController()
-            window?.rootViewController = UINavigationController(rootViewController: trackerVC)
+            window?.rootViewController = TabBarController()
         }
         
         window?.makeKeyAndVisible()

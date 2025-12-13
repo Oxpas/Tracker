@@ -1,0 +1,17 @@
+/* TabBarController */
+"trackers_tab" = "Trackers";
+"statistics_tab" = "Statistics";
+
+/* TrackerViewController */
+"trackers_label" = "Trackers";
+"text_placeholer" = "What we will be tracking?";
+"search_field" = "Search";
+
+/* StatisticViewController */
+"statistics_label" = "Statistics";
+"statistic_text_placeholder" = "There is nothing to analyze yet";
+
+/* DaysNameCounter */
+"days_count" = "%d days";
+
+

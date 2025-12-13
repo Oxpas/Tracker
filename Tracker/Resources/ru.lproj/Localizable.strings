@@ -1,0 +1,15 @@
+/* TabBarController */
+"trackers_tab" = "Трекеры";
+"statistics_tab" = "Статистика";
+
+/* TrackerViewController */
+"trackers_label" = "Трекеры";
+"text_placeholer" = "Что будем отслеживать?";
+"search_field" = "Поиск";
+
+/* StatisticViewController */
+"statistics_label" = "Статистика";
+"statistic_text_placeholder" = "Анализировать пока нечего";
+
+/* DaysNameCounter */
+"days_count" = "%d дней";

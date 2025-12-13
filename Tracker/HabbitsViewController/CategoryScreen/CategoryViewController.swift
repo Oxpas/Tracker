@@ -17,9 +17,8 @@ final class CategoryViewController: UIViewController {
         tableView.register(CategoryTableViewCell.self, forCellReuseIdentifier: CategoryTableViewCell.identifier)
         tableView.layer.cornerRadius = 16
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        tableView.tableFooterView = UIView()
-        
+        tableView.separatorColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
+
         return tableView
     }()
     
@@ -69,8 +68,8 @@ final class CategoryViewController: UIViewController {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Добавить категорию", for: .normal)
         button.layer.cornerRadius = 16
-        button.backgroundColor = UIColor(resource: .ypBlackDay)
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
+        button.setTitleColor(traitCollection.userInterfaceStyle == . light ? .white : .black, for: .normal)
         
         button.addTarget(self, action: #selector(buttonAddCategoryTapped), for: .touchUpInside)
         
@@ -79,7 +78,7 @@ final class CategoryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         setupBindings()
         setupUI()
     }
@@ -133,10 +132,10 @@ final class CategoryViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            tableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -47),
+            tableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -16),
             
             nameLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -32),
             nameLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -213,6 +212,19 @@ extension CategoryViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         viewModel.selectCategory(at: indexPath.row)
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        let numberOfRows = tableView.numberOfRows(inSection: indexPath.section)
+        
+        if indexPath.row == numberOfRows - 1 {
+            cell.layer.cornerRadius = 16
+            cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+            cell.layer.masksToBounds = true
+        } else {
+            cell.layer.cornerRadius = 0
+            cell.layer.masksToBounds = false
+        }
     }
 }
 

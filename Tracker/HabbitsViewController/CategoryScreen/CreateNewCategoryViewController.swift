@@ -29,8 +29,9 @@ final class CreateNewCategoryViewController: UIViewController {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Готово", for: .normal)
+        button.setTitleColor(traitCollection.userInterfaceStyle == .light ? .white : .ypBlackDay, for: .normal)
         button.layer.cornerRadius = 16
-        button.backgroundColor = UIColor(resource: .ypBlackDay)
+        button.backgroundColor = traitCollection.userInterfaceStyle == .light ? .white : .ypBlackDay
         
         button.addAction(UIAction { [weak self] _ in
             self?.didTapDoneButton()
@@ -73,7 +74,7 @@ final class CreateNewCategoryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         
         setupUI()
         setupConstraints()
@@ -119,8 +120,10 @@ final class CreateNewCategoryViewController: UIViewController {
 
         let buttonIsReadyToUse = !isCategoryNameEmpty
         
+        let backgroundColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : UIColor(resource: .ypLightGray)
+        
         addCategoryButton.isEnabled = buttonIsReadyToUse
-        addCategoryButton.backgroundColor = buttonIsReadyToUse ? .black : .ypGray
+        addCategoryButton.backgroundColor = buttonIsReadyToUse ? backgroundColor : .ypGray
     }
     
     private func updateClearButtonVisible() {
