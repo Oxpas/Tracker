@@ -7,10 +7,14 @@
 
 import UIKit
 
+protocol FiltersViewControllerDelegate: AnyObject {
+    func didFilterSelect(_ filter: Filters)
+}
+
 final class FiltersViewController: UIViewController {
     
-    var categoryStore: TrackerCategoryStore?
-    private var categories: [String] = []
+    weak var delegate: FiltersViewControllerDelegate?
+    private var selectedFilterIndex: Int? = nil
     
     private lazy var filtersLabel: UILabel = {
         let label = UILabel()
@@ -29,16 +33,10 @@ final class FiltersViewController: UIViewController {
         tableView.isScrollEnabled = true
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.clipsToBounds = true
-        tableView.separatorColor = .white
+        
         
         return tableView
     }()
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        loadCategories()
-        
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -49,21 +47,6 @@ final class FiltersViewController: UIViewController {
         
         setupUI()
         
-    }
-    
-    private func loadCategories() {
-        guard let categoryStore else {
-            return
-        }
-        
-        do {
-            categories = try categoryStore.fetchAllCategories()
-            tableView.reloadData()
-        } catch {
-            print("Error fetching categories: \(error)")
-            categories = []
-            tableView.reloadData()
-        }
     }
     
     private func setupUI() {
@@ -80,6 +63,7 @@ final class FiltersViewController: UIViewController {
             tableView.heightAnchor.constraint(equalToConstant: 525)
         ])
     }
+    
     
 }
 
@@ -99,20 +83,50 @@ extension FiltersViewController: UITableViewDelegate {
             cell.layer.cornerRadius = 0
             cell.layer.masksToBounds = false
         }
-        
-        
     }
 }
 
 extension FiltersViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        categories.count
+        Filters.allCases.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "filterCell", for: indexPath)
-        cell.textLabel?.text = categories[indexPath.row]
+        
+        let filter = Filters.allCases[indexPath.row]
+        cell.textLabel?.text = filter.rawValue
         cell.backgroundColor = UIColor(named: "YP Background")
+    
+        if indexPath.row == 0 || indexPath.row == 1 {
+            cell.accessoryView = nil
+            return cell
+        }
+        
+        let checkmarkImageView: UIImageView
+        if let existingView = cell.accessoryView as? UIImageView {
+            checkmarkImageView = existingView
+        } else {
+            checkmarkImageView = UIImageView(image: UIImage(systemName: "checkmark"))
+            checkmarkImageView.tintColor = .ypBlue
+            checkmarkImageView.contentMode = .scaleAspectFit
+            cell.accessoryView = checkmarkImageView
+        }
+        
+        checkmarkImageView.isHidden = indexPath.row != selectedFilterIndex
+    
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        selectedFilterIndex = indexPath.row
+        let selectedFilter = Filters.allCases[indexPath.row]
+        delegate?.didFilterSelect(selectedFilter)
+        
+        tableView.reloadData()
+        
+        dismiss(animated: true)
     }
 }

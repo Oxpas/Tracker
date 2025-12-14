@@ -20,6 +20,8 @@ final class TrackerViewController: UIViewController {
         return datePicker.date
     }
     
+    private var currentFilter: Filters = .allTrackers
+    private var isFilterChoose: Bool = false
     
     private lazy var datePicker: UIDatePicker = {
         let picker = UIDatePicker()
@@ -195,7 +197,9 @@ final class TrackerViewController: UIViewController {
     
     private func updateFilterButtonVisibility() {
         let isAtBottom = collectionView.contentOffset.y + collectionView.bounds.height >= collectionView.contentSize.height
-        filterButton.isHidden = isAtBottom
+        let contentFitsScreen = collectionView.contentSize.height <= collectionView.bounds.height
+        let isEmpty = collectionView.numberOfSections == 0
+        filterButton.isHidden = (isAtBottom && !contentFitsScreen) || isEmpty
     }
     
     private func setupNavigationBar() {
@@ -248,20 +252,32 @@ final class TrackerViewController: UIViewController {
     }
     
     @objc private func reloadData() {
-        print("🎯 TrackerViewController: получено уведомление или вызов делегата")
         
         guard let trackerStore = trackerStore else {
-            print("❌ trackerStore is nil!")
             return
         }
         
         let selectedDate = datePicker.date
-        print("📅 Загружаем трекеры для даты: \(selectedDate)")
+        var allTrackers = trackerStore.fetchTrackers(for: selectedDate)
         
         visibleCategories = trackerStore.fetchTrackers(for: selectedDate)
         print("📊 Найдено категорий: \(visibleCategories.count)")
         print("📊 Всего трекеров: \(visibleCategories.reduce(0) { $0 + $1.trackers.count })")
         
+        switch currentFilter {
+        case .allTrackers:
+            visibleCategories = allTrackers
+        case .todayTrackers:
+            let today = Date()
+            var todayTrackers = trackerStore.fetchTrackers(for: today)
+            visibleCategories = todayTrackers
+        case .completedTrackers:
+            filterCompletedTrackers(from: &allTrackers)
+            visibleCategories = allTrackers.filter { !$0.trackers.isEmpty }
+        case .uncompletedTrackers:
+            filterNotCompletedTrackers(from: &allTrackers)
+            visibleCategories = allTrackers.filter { !$0.trackers.isEmpty }
+        }
        
         collectionView.reloadData()
         placeholderVisible()
@@ -298,6 +314,24 @@ final class TrackerViewController: UIViewController {
             let nsError = error as NSError
             fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
+    }
+    
+    private func filterCompletedTrackers(from categories: inout [TrackerCategory]) {
+        for i in 0..<categories.count {
+            categories[i].trackers = categories[i].trackers.filter { tracker in
+                isTrackerCompletedToday(tracker.id)
+            }
+        }
+        visibleCategories = categories.filter { !$0.trackers.isEmpty }
+    }
+    
+    private func filterNotCompletedTrackers(from categories: inout [TrackerCategory]) {
+        for i in 0..<categories.count {
+            categories[i].trackers = categories[i].trackers.filter { tracker in
+                !isTrackerCompletedToday(tracker.id)
+            }
+        }
+        visibleCategories = categories.filter { !$0.trackers.isEmpty }
     }
     
     private func completeTracker(_ trackerID: UUID) {
@@ -366,10 +400,6 @@ final class TrackerViewController: UIViewController {
     
     private func filterButtonTapped() {
         let filtersVC = FiltersViewController()
-        
-        let context = CoreDataStore.shared.viewContext
-        let categoryStore = TrackerCategoryStore(context: context)
-        filtersVC.categoryStore = categoryStore
         
         let navigationVC = UINavigationController(rootViewController: filtersVC)
         present(navigationVC, animated: true)
@@ -591,5 +621,13 @@ extension TrackerViewController: UICollectionViewDelegate {
 extension TrackerViewController: UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         updateFilterButtonVisibility()
+    }
+}
+
+extension TrackerViewController: FiltersViewControllerDelegate {
+    func didFilterSelect(_ filter: Filters) {
+        currentFilter = filter
+        isFilterChoose = true
+        reloadData()
     }
 }

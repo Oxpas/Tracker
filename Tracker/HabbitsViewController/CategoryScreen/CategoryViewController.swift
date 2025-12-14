@@ -17,7 +17,6 @@ final class CategoryViewController: UIViewController {
         tableView.register(CategoryTableViewCell.self, forCellReuseIdentifier: CategoryTableViewCell.identifier)
         tableView.layer.cornerRadius = 16
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.separatorColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
 
         return tableView
     }()
@@ -191,12 +190,6 @@ extension CategoryViewController: UITableViewDataSource {
         if let categoryTitle = viewModel.getCategoryTitle(at: indexPath.row) {
             cell.configure(with: categoryTitle)
             cell.setSelected(viewModel.isCategorySelected(at: indexPath.row))
-        }
-        
-        if indexPath.row == viewModel.getNumberOfCategories() - 1 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        } else {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
         
         return cell

@@ -131,7 +131,6 @@ final class HabbitsViewController: UIViewController {
         tableView.layer.cornerRadius = 16
         tableView.isScrollEnabled = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.separatorColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
         
         return tableView
     }()
@@ -462,25 +461,6 @@ final class HabbitsViewController: UIViewController {
         }
         
         dismiss(animated: true)
-//        guard let trackerName = trackerName.text,
-//              !trackerName.isEmpty,
-//              let selectedCategory,
-//              !selectedCategory.isEmpty,
-//              let emojiIndex = selectedEmojiIndex,
-//              let colorIndex = selectedColorIndex
-//        else { return }
-//        
-//        let emoji = emojies[emojiIndex]
-//        let color = colors[colorIndex]
-//        
-//        let newTracker = Tracker(id: UUID(),
-//                                 name: trackerName,
-//                                 color: color,
-//                                 schedule: selectedSchedule,
-//                                 emoji: emoji)
-//        
-//        delegate?.didCreateNewTracker(newTracker, titleCategory: selectedCategory)
-//        dismiss(animated: true)
     }
     
     private func existingIDOrNew() -> UUID {
@@ -528,14 +508,7 @@ extension HabbitsViewController: UITableViewDelegate, UITableViewDataSource {
             cell.detailTextLabel?.textColor = .gray
             cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17)
         }
-        
-        if indexPath.row == 0 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-            
-        } else {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: .greatestFiniteMagnitude)
-        }
-        
+         
         cell.accessoryType = .disclosureIndicator
         
         return cell
