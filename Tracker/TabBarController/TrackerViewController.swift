@@ -20,12 +20,16 @@ final class TrackerViewController: UIViewController {
         return datePicker.date
     }
     
-    private var currentFilter: Filters = .allTrackers
-    private var isFilterChoose: Bool = false
+    private var currentFilter: Filters = .allTrackers {
+        didSet {
+            UserDefaults.standard.set(currentFilter.rawValue, forKey: "selectedFilter")
+            reloadData()
+        }
+    }
     
     private lazy var datePicker: UIDatePicker = {
         let picker = UIDatePicker()
-        picker.tintColor = UIColor(named: "YP Black")
+        picker.tintColor = UIColor(resource: .ypBlackDay)
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .compact
         picker.translatesAutoresizingMaskIntoConstraints = false
@@ -57,7 +61,6 @@ final class TrackerViewController: UIViewController {
         search.clipsToBounds = true
         
         let searchField = search.searchTextField
-        searchField.backgroundColor = UIColor(named: "YP LigthGay")
         
         return search
     }()
@@ -111,7 +114,7 @@ final class TrackerViewController: UIViewController {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         button.setTitle("Фильтры", for: .normal)
-        button.backgroundColor = .ypBlue
+        button.backgroundColor = UIColor(resource: .redCell)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.layer.cornerRadius = 16
         button.isHidden = false
@@ -130,29 +133,25 @@ final class TrackerViewController: UIViewController {
         
         trackerStore?.delegate = self
         
-        print("🎯 TrackerViewController загружен")
-        
         let params: [String: Any] = [
             "event" : "open",
             "screen" : "Main"
         ]
         analyticsService?.report(event: "open", params: params)
         
-        print("📊 trackerStore: \(String(describing: trackerStore))")
-        print("📊 trackerRecordStore: \(String(describing: trackerRecordStore))")
-        
         if trackerStore == nil {
-            print("⚠️ ВНИМАНИЕ: trackerStore = nil!")
-            print("⚠️ Настраиваем через DataService...")
-            
-            // Автоматическая настройка, если забыли настроить извне
             let dataService = DataService.shared
             trackerStore = dataService.trackerStore
             trackerRecordStore = dataService.trackerRecordStore
             trackerStore?.delegate = self
-            
-            print("✅ Автонастройка завершена")
-            print("📊 trackerStore теперь: \(String(describing: trackerStore))")
+        }
+        
+        if let savedFilterRaw = UserDefaults.standard.string(forKey: "selectedFilter"),
+           let savedFilter = Filters(rawValue: savedFilterRaw) {
+            currentFilter = savedFilter
+        } else {
+            currentFilter = .allTrackers
+            UserDefaults.standard.set(currentFilter.rawValue, forKey: "selectedFilter")
         }
         
         loadData()
@@ -175,7 +174,7 @@ final class TrackerViewController: UIViewController {
         analyticsService?.report(event: "close", params: params)
     }
     
-
+    
     private func setupUI() {
         view.backgroundColor = UIColor.systemBackground
         
@@ -191,15 +190,29 @@ final class TrackerViewController: UIViewController {
     
     private func placeholderVisible() {
         let hasVisibleTrackers = visibleCategories.contains { !$0.trackers.isEmpty }
-        placeholderView.isHidden = hasVisibleTrackers
-        collectionView.isHidden = !hasVisibleTrackers
+        
+        if hasVisibleTrackers {
+            placeholderView.isHidden = true
+            collectionView.isHidden = false
+        } else {
+            if currentFilter != .allTrackers && currentFilter != .todayTrackers {
+                imagePlaceholder.image = UIImage(resource: .filterPlaceholder)
+                textUnderPicturePlaceholder.text = "Ничего не найдено"
+            } else {
+                imagePlaceholder.image = UIImage(resource: .placeholder)
+                textUnderPicturePlaceholder.text = "Что будем отслеживать?"
+            }
+            placeholderView.isHidden = false
+            collectionView.isHidden = true
+        }
     }
     
     private func updateFilterButtonVisibility() {
-        let isAtBottom = collectionView.contentOffset.y + collectionView.bounds.height >= collectionView.contentSize.height
-        let contentFitsScreen = collectionView.contentSize.height <= collectionView.bounds.height
-        let isEmpty = collectionView.numberOfSections == 0
-        filterButton.isHidden = (isAtBottom && !contentFitsScreen) || isEmpty
+        guard let trackerStore = trackerStore else { return }
+        let allTrackersForDate = trackerStore.fetchTrackers(for: currentDate)
+        let hasAnyTrackersForDate = allTrackersForDate.contains { !$0.trackers.isEmpty }
+        
+        filterButton.isHidden = !hasAnyTrackersForDate
     }
     
     private func setupNavigationBar() {
@@ -257,34 +270,52 @@ final class TrackerViewController: UIViewController {
             return
         }
         
+        if currentFilter == .todayTrackers {
+            let today = Date()
+            if !calendar.isDate(datePicker.date, inSameDayAs: today) {
+                datePicker.date = today
+            }
+        }
+        
         let selectedDate = datePicker.date
-        var allTrackers = trackerStore.fetchTrackers(for: selectedDate)
+        var filteredCategories = trackerStore.fetchTrackers(for: selectedDate)
         
         visibleCategories = trackerStore.fetchTrackers(for: selectedDate)
         print("📊 Найдено категорий: \(visibleCategories.count)")
         print("📊 Всего трекеров: \(visibleCategories.reduce(0) { $0 + $1.trackers.count })")
         
+        loadData()
+        
         switch currentFilter {
         case .allTrackers:
-            visibleCategories = allTrackers
+            break
         case .todayTrackers:
             let today = Date()
-            var todayTrackers = trackerStore.fetchTrackers(for: today)
-            visibleCategories = todayTrackers
+            if !calendar.isDate(selectedDate, inSameDayAs: today) {
+                datePicker.date = today
+                
+                DispatchQueue.main.async { [weak self] in
+                    self?.reloadData()
+                }
+                return
+            }
         case .completedTrackers:
-            filterCompletedTrackers(from: &allTrackers)
-            visibleCategories = allTrackers.filter { !$0.trackers.isEmpty }
+            filterCompletedTrackers(from: &filteredCategories)
+            
         case .uncompletedTrackers:
-            filterNotCompletedTrackers(from: &allTrackers)
-            visibleCategories = allTrackers.filter { !$0.trackers.isEmpty }
+            filterNotCompletedTrackers(from: &filteredCategories)
+            
         }
-       
+        
+        visibleCategories = filteredCategories.filter { !$0.trackers.isEmpty }
+        
         collectionView.reloadData()
         placeholderVisible()
         
+        
         DispatchQueue.main.async { [weak self] in
-                self?.updateFilterButtonVisibility()
-            }
+            self?.updateFilterButtonVisibility()
+        }
         
     }
     
@@ -385,9 +416,9 @@ final class TrackerViewController: UIViewController {
     }
     
     @objc func addTrackerButtonTapped() {
-        let habbitsViewController = HabbitsViewController(mode: .create)
-        habbitsViewController.delegate = self
-        let navigationController = UINavigationController(rootViewController: habbitsViewController)
+        let habitsViewController = HabitsViewController(mode: .create)
+        habitsViewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: habitsViewController)
         present(navigationController, animated: true)
         
         let params: [String: Any] = [
@@ -400,9 +431,24 @@ final class TrackerViewController: UIViewController {
     
     private func filterButtonTapped() {
         let filtersVC = FiltersViewController()
+        filtersVC.delegate = self
         
         let navigationVC = UINavigationController(rootViewController: filtersVC)
+        navigationVC.modalPresentationStyle = .pageSheet
+        
+        if let sheet = navigationVC.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        
         present(navigationVC, animated: true)
+        
+        let params: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "filter"
+        ]
+        analyticsService?.report(event: "click", params: params)
     }
 }
 
@@ -583,7 +629,7 @@ extension TrackerViewController: UICollectionViewDelegate {
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.item]
         let categoryTitle = visibleCategories[indexPath.section].title
         
-        let editVC = HabbitsViewController(mode: .edit(tracker))
+        let editVC = HabitsViewController(mode: .edit(tracker))
         editVC.selectedCategory = categoryTitle        // если нужно
         editVC.delegate = self
         
@@ -615,8 +661,8 @@ extension TrackerViewController: UICollectionViewDelegate {
         
         collectionView.reloadData()
         present(alert, animated: true)
-        }
     }
+}
 
 extension TrackerViewController: UIScrollViewDelegate {
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -627,7 +673,9 @@ extension TrackerViewController: UIScrollViewDelegate {
 extension TrackerViewController: FiltersViewControllerDelegate {
     func didFilterSelect(_ filter: Filters) {
         currentFilter = filter
-        isFilterChoose = true
+        if filter == .todayTrackers {
+            datePicker.date = Date()
+        }
         reloadData()
     }
 }

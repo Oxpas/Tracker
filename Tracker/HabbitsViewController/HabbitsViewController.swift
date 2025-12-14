@@ -16,7 +16,7 @@ protocol CreateTrackerViewControllerDelegate: AnyObject {
     func didEditTracker(_ tracker: Tracker, titleCategory: String)
 }
 
-final class HabbitsViewController: UIViewController {
+final class HabitsViewController: UIViewController {
     
     weak var delegate: CreateTrackerViewControllerDelegate?
     
@@ -483,7 +483,7 @@ final class HabbitsViewController: UIViewController {
     }
 }
 
-extension HabbitsViewController: UITableViewDelegate, UITableViewDataSource {
+extension HabitsViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         cellData.count
     }
@@ -549,15 +549,15 @@ extension HabbitsViewController: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
-extension HabbitsViewController: ScheduleSelectionDelegate {
-    func didSelecteWeekdays(_ schedule: [Weekdays]) {
+extension HabitsViewController: ScheduleSelectionDelegate {
+    func didSelectWeekdays(_ schedule: [Weekdays]) {
         selectedSchedule = schedule
         tableView.reloadData()
         updateCreateButtonEnable()
     }
 }
 
-extension HabbitsViewController: CategorySelectionDelegate {
+extension HabitsViewController: CategorySelectionDelegate {
     func didCategorySelect(_ category: String) {
         selectedCategory = category
         tableView.reloadData()
@@ -565,7 +565,7 @@ extension HabbitsViewController: CategorySelectionDelegate {
     }
 }
 
-extension HabbitsViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+extension HabitsViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == emojiCollectionView {
             return emojies.count

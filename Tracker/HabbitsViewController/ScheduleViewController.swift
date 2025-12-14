@@ -7,7 +7,7 @@
 import UIKit
 
 protocol ScheduleSelectionDelegate: AnyObject {
-    func didSelecteWeekdays(_ schedule: [Weekdays])
+    func didSelectWeekdays(_ schedule: [Weekdays])
 }
 
 final class ScheduleViewController: UIViewController {
@@ -88,7 +88,7 @@ final class ScheduleViewController: UIViewController {
     }
     
     private func doneButtonTapped() {
-        delegate?.didSelecteWeekdays(selectedDays)
+        delegate?.didSelectWeekdays(selectedDays)
         dismiss(animated: true)
     }
 }

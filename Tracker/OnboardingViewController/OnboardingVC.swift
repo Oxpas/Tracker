@@ -8,8 +8,8 @@
 import UIKit
 
 struct OnboardingPage {
-    var title: String
-    var image: UIImage
+    let title: String
+    let image: UIImage
 }
 
 final class OnboardingViewControllers: UIPageViewController {
@@ -82,40 +82,40 @@ final class OnboardingViewControllers: UIPageViewController {
     }
     
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     private func createViewControllers(_ page: OnboardingPage) -> UIViewController {
         let vc = UIViewController()
-
-            let backImage = UIImageView()
-            backImage.image = page.image
-            backImage.translatesAutoresizingMaskIntoConstraints = false
-
-            let label = UILabel()
-            label.text = page.title
-            label.textColor = .ypBlackDay
-            label.translatesAutoresizingMaskIntoConstraints = false
-            label.font = .systemFont(ofSize: 32, weight: .bold)
-            label.textAlignment = .center
-            label.numberOfLines = 0
-            label.lineBreakMode = .byWordWrapping
-
-            vc.view.addSubview(backImage)
-            vc.view.addSubview(label)
-
-            NSLayoutConstraint.activate([
-                backImage.topAnchor.constraint(equalTo: vc.view.topAnchor),
-                backImage.bottomAnchor.constraint(equalTo: vc.view.bottomAnchor),
-                backImage.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor),
-                backImage.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor),
-
-                label.leadingAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-                label.trailingAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-                label.bottomAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.bottomAnchor, constant: -270)
-            ])
-
-            return vc
+        
+        let backImage = UIImageView()
+        backImage.image = page.image
+        backImage.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = page.title
+        label.textColor = .ypBlackDay
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.font = .systemFont(ofSize: 32, weight: .bold)
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.lineBreakMode = .byWordWrapping
+        
+        vc.view.addSubview(backImage)
+        vc.view.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            backImage.topAnchor.constraint(equalTo: vc.view.topAnchor),
+            backImage.bottomAnchor.constraint(equalTo: vc.view.bottomAnchor),
+            backImage.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor),
+            backImage.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor),
+            
+            label.leadingAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            label.bottomAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.bottomAnchor, constant: -270)
+        ])
+        
+        return vc
     }
     
     private func openMainScreen() {
@@ -134,9 +134,9 @@ extension OnboardingViewControllers: UIPageViewControllerDataSource, UIPageViewC
         
         let previousIndex = viewControllerIndex - 1
         
-        guard previousIndex >= 0 else { return nil}
-        
-        guard pages.indices.contains(previousIndex) else { return nil}
+        guard previousIndex >= 0,
+              pages.indices.contains(previousIndex)
+        else { return nil}
         
         return pages[previousIndex]
     }
@@ -146,9 +146,10 @@ extension OnboardingViewControllers: UIPageViewControllerDataSource, UIPageViewC
         
         let previousIndex = viewControllerIndex + 1
         
-        guard previousIndex >= 0 else { return nil}
+        guard previousIndex >= 0,
+              pages.indices.contains(previousIndex)
+        else { return nil}
         
-        guard pages.indices.contains(previousIndex) else { return nil}
         
         return pages[previousIndex]
     }

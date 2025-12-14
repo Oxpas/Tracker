@@ -7,7 +7,7 @@ protocol CategorySelectionDelegate: AnyObject {
 final class CategoryViewController: UIViewController {
     
     weak var delegate: CategorySelectionDelegate?
-    private var viewModel: CategoryViewModel!
+    private var viewModel: CategoryViewModel?
     
     var initiallySelectedCategory: String?
     
@@ -84,8 +84,8 @@ final class CategoryViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        viewModel.setInitiallySelectedCategory(initiallySelectedCategory)
-        viewModel.loadCategories()
+        viewModel?.setInitiallySelectedCategory(initiallySelectedCategory)
+        viewModel?.loadCategories()
     }
     
     func configure(trackerCategoryStore: TrackerCategoryStore) {
@@ -95,20 +95,20 @@ final class CategoryViewController: UIViewController {
     private func setupBindings() {
         guard viewModel != nil else { return }
         
-        viewModel.onCategoriesUpdated = { [weak self] in
+        viewModel?.onCategoriesUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.tableView.reloadData()
                 self?.updatePlaceholderVisibility()
             }
         }
         
-        viewModel.onErrorOccurred = { [weak self] errorMessage in
+        viewModel?.onErrorOccurred = { [weak self] errorMessage in
             DispatchQueue.main.async {
                 self?.showErrorAlert(message: errorMessage)
             }
         }
         
-        viewModel.onCategorySelected = { [weak self] category in
+        viewModel?.onCategorySelected = { [weak self] category in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self?.delegate?.didCategorySelect(category)
                 self?.dismiss(animated: true)
@@ -176,6 +176,7 @@ final class CategoryViewController: UIViewController {
 // MARK: - UITableViewDataSource
 extension CategoryViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        guard let viewModel else { return 0 }
         return viewModel.getNumberOfCategories()
     }
     
@@ -186,6 +187,8 @@ extension CategoryViewController: UITableViewDataSource {
         ) as? CategoryTableViewCell else {
             return UITableViewCell()
         }
+        
+        guard let viewModel else { return UITableViewCell() }
         
         if let categoryTitle = viewModel.getCategoryTitle(at: indexPath.row) {
             cell.configure(with: categoryTitle)
@@ -204,7 +207,7 @@ extension CategoryViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        viewModel.selectCategory(at: indexPath.row)
+        viewModel?.selectCategory(at: indexPath.row)
     }
     
     func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
@@ -225,6 +228,6 @@ extension CategoryViewController: UITableViewDelegate {
 extension CategoryViewController: CreateNewCategoryViewControllerProtocol {
     func didTapDoneButton(_ categoryName: String?) {
         guard let categoryName = categoryName, !categoryName.isEmpty else { return }
-        viewModel.createCategory(with: categoryName)
+        viewModel?.createCategory(with: categoryName)
     }
 }

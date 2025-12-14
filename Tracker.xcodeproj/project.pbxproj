@@ -56,19 +56,9 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		952F44792EED6E5800E55A5C /* FiltersViewController */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FiltersViewController;
-			sourceTree = "<group>";
-		};
 		9546DE2B2EEA95D3008C98A2 /* TrackerSnapshotsTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = TrackerSnapshotsTests;
-			sourceTree = "<group>";
-		};
-		9573361E2EE1A9F5009018DF /* OnboardingViewController */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = OnboardingViewController;
 			sourceTree = "<group>";
 		};
 		9587352A2EEADFFE00FF889B /* AnalyticsService */ = {
@@ -141,9 +131,7 @@
 		95E0D8182EAB2E11001C6894 = {
 			isa = PBXGroup;
 			children = (
-				952F44792EED6E5800E55A5C /* FiltersViewController */,
 				9587352A2EEADFFE00FF889B /* AnalyticsService */,
-				9573361E2EE1A9F5009018DF /* OnboardingViewController */,
 				9593424B2ED9A90C006D9B1F /* AppSettings */,
 				95E0D8232EAB2E11001C6894 /* Tracker */,
 				95E0D83A2EAB2E13001C6894 /* TrackerTests */,
@@ -204,8 +192,6 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				952F44792EED6E5800E55A5C /* FiltersViewController */,
-				9573361E2EE1A9F5009018DF /* OnboardingViewController */,
 				9587352A2EEADFFE00FF889B /* AnalyticsService */,
 				9593424B2ED9A90C006D9B1F /* AppSettings */,
 				95E0D8232EAB2E11001C6894 /* Tracker */,

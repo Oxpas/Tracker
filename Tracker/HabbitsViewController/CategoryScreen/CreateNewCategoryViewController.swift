@@ -44,7 +44,7 @@ final class CreateNewCategoryViewController: UIViewController {
         let textField = UITextField()
         textField.placeholder = "Введите название категории"
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.backgroundColor = UIColor(named: "YP Background")
+        textField.backgroundColor = UIColor(resource: .ypBackground)
         textField.layer.cornerRadius = 16
         
         let leftPadding = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
@@ -135,9 +135,7 @@ final class CreateNewCategoryViewController: UIViewController {
         categoryName.text = ""
         textChanged()
         
-        if categoryName.isFirstResponder {
-            
-        } else {
+        if !categoryName.isFirstResponder {
             categoryName.becomeFirstResponder()
         }
     }

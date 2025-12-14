@@ -14,7 +14,7 @@ protocol FiltersViewControllerDelegate: AnyObject {
 final class FiltersViewController: UIViewController {
     
     weak var delegate: FiltersViewControllerDelegate?
-    private var selectedFilterIndex: Int? = nil
+    private var selectedFilterIndex: Int = 0
     
     private lazy var filtersLabel: UILabel = {
         let label = UILabel()
@@ -45,8 +45,19 @@ final class FiltersViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         
+        setupSelectedFilter()
         setupUI()
-        
+    }
+    
+    private func setupSelectedFilter() {
+        if let savedFilterRaw = UserDefaults.standard.string(forKey: "selectedFilter"),
+           let savedFilter = Filters(rawValue: savedFilterRaw),
+           let index = Filters.allCases.firstIndex(of: savedFilter) {
+            selectedFilterIndex = index
+        } else {
+            selectedFilterIndex = 0
+            UserDefaults.standard.set(Filters.allTrackers.rawValue, forKey: "selectedFilter")
+        }
     }
     
     private func setupUI() {
@@ -97,11 +108,8 @@ extension FiltersViewController: UITableViewDataSource {
         let filter = Filters.allCases[indexPath.row]
         cell.textLabel?.text = filter.rawValue
         cell.backgroundColor = UIColor(named: "YP Background")
-    
-        if indexPath.row == 0 || indexPath.row == 1 {
-            cell.accessoryView = nil
-            return cell
-        }
+        
+        cell.accessoryView = nil
         
         let checkmarkImageView: UIImageView
         if let existingView = cell.accessoryView as? UIImageView {
@@ -113,8 +121,13 @@ extension FiltersViewController: UITableViewDataSource {
             cell.accessoryView = checkmarkImageView
         }
         
-        checkmarkImageView.isHidden = indexPath.row != selectedFilterIndex
-    
+        if indexPath.row == 0 || indexPath.row == 1 {
+            checkmarkImageView.isHidden = true
+        } else {
+            checkmarkImageView.isHidden = indexPath.row != selectedFilterIndex
+        }
+        
+        
         return cell
     }
     
@@ -123,9 +136,10 @@ extension FiltersViewController: UITableViewDataSource {
         
         selectedFilterIndex = indexPath.row
         let selectedFilter = Filters.allCases[indexPath.row]
-        delegate?.didFilterSelect(selectedFilter)
+        UserDefaults.standard.set(selectedFilter.rawValue, forKey: "selectedFilter")
         
         tableView.reloadData()
+        delegate?.didFilterSelect(selectedFilter)
         
         dismiss(animated: true)
     }

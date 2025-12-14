@@ -56,7 +56,7 @@ final class TrackerCategoryStore {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "title == %@", title)
         
-        let existingCategories = try context.fetch(fetchRequest)
+        _ = try context.fetch(fetchRequest)
         
         let newCategory = TrackerCategoryCoreData(context: context)
         newCategory.title = title
