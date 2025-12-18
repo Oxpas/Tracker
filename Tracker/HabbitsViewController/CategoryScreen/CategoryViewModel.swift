@@ -1,4 +1,4 @@
-import Foundation
+import UIKit
 
 final class CategoryViewModel {
     
@@ -8,6 +8,7 @@ final class CategoryViewModel {
     var onCategoriesUpdated: (() -> Void)?
     var onErrorOccurred: ((String) -> Void)?
     var onCategorySelected: ((String) -> Void)?
+    var onCategoryEditing: ((String) ->Void)?
     
     private var selectedCategory: String?
     
@@ -70,5 +71,32 @@ final class CategoryViewModel {
     
     var hasCategories: Bool {
         return !categories.isEmpty
+    }
+    
+    func editCategory(at indexPath: IndexPath) {
+        guard indexPath.row < categories.count else { return }
+        let oldCategoryTitle = categories[indexPath.row].title
+        onCategoryEditing?(oldCategoryTitle)
+    }
+    
+    func updateCategory(oldTitle: String, newTitle: String) {
+        
+        do {
+            try trackerCategoryStore.updateCategory(oldTitle: oldTitle, newTitle: newTitle)
+            loadCategories()
+        } catch {
+            print("Error to update category \(error)")
+        }
+    }
+    
+    func deleteCategory(at indexPath: IndexPath) {
+        let categoryToDelete = categories[indexPath.row].title
+        do {
+            try self.trackerCategoryStore.deleteCategory(categoryToDelete)
+            loadCategories()
+        } catch {
+            print("Failed to delete category \(error)")
+        }
+        
     }
 }

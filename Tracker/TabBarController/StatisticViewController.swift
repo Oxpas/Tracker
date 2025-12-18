@@ -15,10 +15,11 @@ struct Card {
 final class StatisticViewController: UIViewController {
     
     private var trackerStore: TrackerStore?
-    private var trackersCompletedCount: Int = 0
-    private var perfectDays: Int = 0
-    private var longestStreak: Int = 0
-    private var averageTracker: Int = 0
+    
+    private var trackersCompletedCount = UserDefaults.standard.integer(forKey: "trackers_done")
+    private var perfectDays = UserDefaults.standard.integer(forKey: "perfect_days")
+    private var longestStreak = UserDefaults.standard.integer(forKey: "longest_streak")
+    private var averageTracker = UserDefaults.standard.integer(forKey: "average_value")
     
     private lazy var trackerRecordStore: TrackerRecordStore = {
         let context = DataService.shared.context
@@ -125,18 +126,15 @@ final class StatisticViewController: UIViewController {
     }
     
     private func createCardStack(number: Int, text: String) -> UIView {
-        // Контейнер для всей карточки
         let container = UIView()
         container.translatesAutoresizingMaskIntoConstraints = false
         container.backgroundColor = .clear
         
-        // Внутренняя часть карточки
         let cardView = UIView()
         cardView.translatesAutoresizingMaskIntoConstraints = false
         cardView.layer.cornerRadius = 16
         cardView.clipsToBounds = true
         
-        // Стек для текста
         let numberLabel = UILabel()
         numberLabel.text = "\(number)"
         numberLabel.font = UIFont.systemFont(ofSize: 34, weight: .bold)
@@ -174,43 +172,47 @@ final class StatisticViewController: UIViewController {
         return container
     }
     
-    private func setupCards() {
-        // Очищаем существующие элементы
-        mainCardStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        gradientBorders.forEach { $0.removeFromSuperview() }
-        gradientBorders.removeAll()
-        
+    private func updateInfoNumbers() {
         let record = trackerRecordStore.fetchCompletedTrackers().count
+        UserDefaults.standard.set(record, forKey: "trackers_done")
         trackersCompletedCount = record
     
         
         let perfect = trackerRecordStore.perfectDaysCount()
+        UserDefaults.standard.set(perfect, forKey: "perfect_days")
         perfectDays = perfect
         
         let longest = trackerRecordStore.longestStreak()
+        UserDefaults.standard.set(longest, forKey: "longest_streak")
         longestStreak = longest
         
         let average = trackerRecordStore.averageTrackersPerDay()
+        UserDefaults.standard.set(average, forKey: "average_value")
         averageTracker = average
+    }
+    
+    private func setupCards() {
+        mainCardStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        gradientBorders.forEach { $0.removeFromSuperview() }
+        gradientBorders.removeAll()
+        
+        updateInfoNumbers() 
         
         let cards: [Card] = [
-            Card(number: trackersCompletedCount, text: "Трекеров завершено"),
-            Card(number: perfectDays, text: "Идеальные дни"),
-            Card(number: longestStreak, text: "Лучший период"),
-            Card(number: averageTracker, text: "Среднее значение")
+            Card(number: trackersCompletedCount, text:  NSLocalizedString("trackers_done", comment: "StatisticViewController")),
+            Card(number: perfectDays, text:  NSLocalizedString("perfect_days", comment: "StatisticViewController")),
+            Card(number: longestStreak, text:  NSLocalizedString("best_period", comment: "StatisticViewController")),
+            Card(number: averageTracker, text:  NSLocalizedString("average_value", comment: "StatisticViewController"))
         ]
         
         for cardData in cards {
-            // Создаем карточку
             let cardView = createCardStack(number: cardData.number, text: cardData.text)
             mainCardStack.addArrangedSubview(cardView)
             
-            // Создаем градиентную рамку для этой карточки
             let gradientBorder = createGradientBorderView()
             view.insertSubview(gradientBorder, belowSubview: cardView)
             gradientBorders.append(gradientBorder)
             
-            // Устанавливаем констрейнты для градиентной рамки
             NSLayoutConstraint.activate([
                 gradientBorder.topAnchor.constraint(equalTo: cardView.topAnchor, constant: -1),
                 gradientBorder.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: -1),
@@ -219,7 +221,6 @@ final class StatisticViewController: UIViewController {
             ])
         }
         
-        // Обновляем градиенты после создания всех рамок
         updateAllGradientFrames()
     }
     
@@ -239,7 +240,6 @@ final class StatisticViewController: UIViewController {
     }
     
     private func updateGradientFrame(for gradientBorder: UIView) {
-        // Удаляем старые градиентные слои
         gradientBorder.layer.sublayers?.removeAll()
         
         let gradient = CAGradientLayer()

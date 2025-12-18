@@ -6,12 +6,27 @@
 "trackers_label" = "Trackers";
 "text_placeholer" = "What we will be tracking?";
 "search_field" = "Search";
+"filter_button" = "Filters";
+"found_nothing" = "Nothing was found";
 
 /* StatisticViewController */
 "statistics_label" = "Statistics";
 "statistic_text_placeholder" = "There is nothing to analyze yet";
+"trackers_done" = "Trackers completed";
+"perfect_days" = "Perfect days";
+"best_period" = "Best period";
+"average_value" = "Average value";
+"statistics_placeholder" = "There is nothing to analyze yet";
+
 
 /* DaysNameCounter */
 "days_count" = "%d days";
 
+/* HabitsViewController */
+"new_habit" = "New habit";
+"category_label" = "Category";
+"schedule_label" = "Schedule";
+"color_label" = "Color";
+"cancel_button" = "Cancel";
+"done_button" = "Create";
 

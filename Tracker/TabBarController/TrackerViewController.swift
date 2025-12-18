@@ -29,18 +29,24 @@ final class TrackerViewController: UIViewController {
     
     private lazy var datePicker: UIDatePicker = {
         let picker = UIDatePicker()
-        picker.tintColor = UIColor(resource: .ypBlackDay)
+        picker.tintColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .compact
         picker.translatesAutoresizingMaskIntoConstraints = false
-        picker.locale = Locale(identifier: "ru_RU")
-        picker.backgroundColor = .clear
+        
+        let currentLanguage = Bundle.main.preferredLocalizations.first ?? "en"
+        let localeId = currentLanguage == "ru" ? "ru_RU" : "en_US"
+        picker.locale = Locale(identifier: localeId)
+        picker.backgroundColor = .systemBackground
         
         picker.addAction(UIAction { [weak self] _ in
             self?.datePickerValueChanged()
         }, for: .valueChanged)
         
         return picker
+        
+        
+
     }()
     
     private lazy var titleLabel: UILabel = {
@@ -113,7 +119,7 @@ final class TrackerViewController: UIViewController {
     private lazy var filterButton: UIButton = {
         let button = UIButton()
         button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
-        button.setTitle("Фильтры", for: .normal)
+        button.setTitle(NSLocalizedString("filter_button", comment: "TrackerViewController"), for: .normal)
         button.backgroundColor = UIColor(resource: .redCell)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.layer.cornerRadius = 16
@@ -197,10 +203,10 @@ final class TrackerViewController: UIViewController {
         } else {
             if currentFilter != .allTrackers && currentFilter != .todayTrackers {
                 imagePlaceholder.image = UIImage(resource: .filterPlaceholder)
-                textUnderPicturePlaceholder.text = "Ничего не найдено"
+                textUnderPicturePlaceholder.text = NSLocalizedString("found_nothing", comment: "TrackerViewController")
             } else {
                 imagePlaceholder.image = UIImage(resource: .placeholder)
-                textUnderPicturePlaceholder.text = "Что будем отслеживать?"
+                textUnderPicturePlaceholder.text = NSLocalizedString("text_placeholer", comment: "TrackerViewController")
             }
             placeholderView.isHidden = false
             collectionView.isHidden = true
@@ -208,11 +214,25 @@ final class TrackerViewController: UIViewController {
     }
     
     private func updateFilterButtonVisibility() {
-        guard let trackerStore = trackerStore else { return }
-        let allTrackersForDate = trackerStore.fetchTrackers(for: currentDate)
-        let hasAnyTrackersForDate = allTrackersForDate.contains { !$0.trackers.isEmpty }
-        
-        filterButton.isHidden = !hasAnyTrackersForDate
+            guard let trackerStore = trackerStore else { return }
+            let allTrackersForDate = trackerStore.fetchTrackers(for: currentDate)
+            let hasAnyTrackersForDate = allTrackersForDate.contains { !$0.trackers.isEmpty }
+            
+            if !hasAnyTrackersForDate {
+                filterButton.isHidden = true
+                return
+            }
+            
+            let scrollView = collectionView
+            let contentHeight = scrollView.contentSize.height
+            let frameHeight = scrollView.frame.height
+            let contentOffsetY = scrollView.contentOffset.y
+            
+            let isScrolledToBottom = contentOffsetY + frameHeight >= contentHeight - 20
+            
+            UIView.animate(withDuration: 0.3) { [weak self] in
+                self?.filterButton.isHidden = isScrolledToBottom
+            }
     }
     
     private func setupNavigationBar() {
@@ -630,11 +650,18 @@ extension TrackerViewController: UICollectionViewDelegate {
         let categoryTitle = visibleCategories[indexPath.section].title
         
         let editVC = HabitsViewController(mode: .edit(tracker))
-        editVC.selectedCategory = categoryTitle        // если нужно
+        editVC.selectedCategory = categoryTitle
         editVC.delegate = self
         
         let nav = UINavigationController(rootViewController: editVC)
         present(nav, animated: true)
+        
+        let params: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "edit"
+        ]
+        analyticsService?.report(event: "click", params: params)
     }
     
     private func deleteItem(at indexPath: IndexPath) {
@@ -655,6 +682,13 @@ extension TrackerViewController: UICollectionViewDelegate {
                 print("Failed to delete tracker: \(error)")
             }
         }
+        
+        let params: [String: Any] = [
+            "event": "click",
+            "screen": "Main",
+            "item": "delete"
+        ]
+        self.analyticsService?.report(event: "click", params: params)
         
         alert.addAction(cancel)
         alert.addAction(delete)

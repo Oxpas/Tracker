@@ -17,7 +17,7 @@ final class CategoryViewController: UIViewController {
         tableView.register(CategoryTableViewCell.self, forCellReuseIdentifier: CategoryTableViewCell.identifier)
         tableView.layer.cornerRadius = 16
         tableView.translatesAutoresizingMaskIntoConstraints = false
-
+        
         return tableView
     }()
     
@@ -114,6 +114,12 @@ final class CategoryViewController: UIViewController {
                 self?.dismiss(animated: true)
             }
         }
+        
+        viewModel?.onCategoryEditing = { [weak self] oldCategoryTitle in
+            DispatchQueue.main.async {
+                self?.showEditCategoryScreen(oldCategoryTitle: oldCategoryTitle)
+            }
+        }
     }
     
     private func setupUI() {
@@ -166,9 +172,16 @@ final class CategoryViewController: UIViewController {
     }
     
     @objc private func buttonAddCategoryTapped() {
-        let createNewCategoryViewController = CreateNewCategoryViewController()
+        let createNewCategoryViewController = CreateNewCategoryViewController(mode: .create)
         createNewCategoryViewController.delegate = self
         let navigationController = UINavigationController(rootViewController: createNewCategoryViewController)
+        present(navigationController, animated: true)
+    }
+    
+    private func showEditCategoryScreen(oldCategoryTitle: String) {
+        let editCategoryViewController = CreateNewCategoryViewController(mode: .edit(oldCategoryTitle))
+        editCategoryViewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: editCategoryViewController)
         present(navigationController, animated: true)
     }
 }
@@ -222,12 +235,46 @@ extension CategoryViewController: UITableViewDelegate {
             cell.layer.masksToBounds = false
         }
     }
+    
+    func tableView(
+        _ tableView: UITableView,
+        contextMenuConfigurationForRowAt indexPath: IndexPath,
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        
+        return UIContextMenuConfiguration(
+            identifier: nil,
+            previewProvider: nil
+        ) { _ in
+            let edit = UIAction(
+                title: "Редактировать"
+            ) { [weak self] _ in
+                self?.viewModel?.editCategory(at: indexPath)
+            }
+            
+            let delete = UIAction(
+                title: "Удалить",
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.viewModel?.deleteCategory(at: indexPath)
+            }
+            
+            return UIMenu(title: "", children: [edit, delete])
+        }
+    }
 }
 
 // MARK: - CreateNewCategoryViewControllerProtocol
 extension CategoryViewController: CreateNewCategoryViewControllerProtocol {
-    func didTapDoneButton(_ categoryName: String?) {
+    func didTapDoneButton(_ categoryName: String?, mode: CreateNewCategoryViewController.Mode) {
         guard let categoryName = categoryName, !categoryName.isEmpty else { return }
-        viewModel?.createCategory(with: categoryName)
+        
+        switch mode {
+        case .create:
+            viewModel?.createCategory(with: categoryName)
+            
+        case .edit(let oldTitle):
+            viewModel?.updateCategory(oldTitle: oldTitle, newTitle: categoryName)
+        }
     }
 }

@@ -64,8 +64,8 @@ final class HabitsViewController: UIViewController {
     ]
     
     private let cellData = [
-        "Категория",
-        "Расписание"
+        NSLocalizedString("category_label", comment: "HabitsViewController"),
+        NSLocalizedString("schedule_label", comment: "HabitsViewController")
     ]
     
      var selectedCategory: String?
@@ -76,7 +76,7 @@ final class HabitsViewController: UIViewController {
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Новая привычка"
+        label.text = NSLocalizedString("new_habit", comment: "HabitsViewController")
         
         return label
     }()
@@ -138,7 +138,7 @@ final class HabitsViewController: UIViewController {
     private lazy var cancelButton: UIButton = {
         let button = UIButton(type: .system)
         
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle(NSLocalizedString("cancel_button", comment: "HabitsViewController"), for: .normal)
         button.setTitleColor(.ypRed, for: .normal)
         
         button.layer.cornerRadius = 16
@@ -156,7 +156,7 @@ final class HabitsViewController: UIViewController {
     private lazy var createButton: UIButton = {
         let button = UIButton(type: .system)
         
-        button.setTitle("Создать", for: .normal)
+        button.setTitle(NSLocalizedString("done_button", comment: "HabitsViewController"), for: .normal)
         button.backgroundColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 16
@@ -225,7 +225,7 @@ final class HabitsViewController: UIViewController {
     private lazy var colorLabel: UILabel = {
         let label = UILabel()
         
-        label.text = "Цвет"
+        label.text = NSLocalizedString("color_label", comment: "HabitsViewController")
         label.font = UIFont.systemFont(ofSize: 19, weight: .bold)
         label.translatesAutoresizingMaskIntoConstraints = false
         
@@ -261,8 +261,8 @@ final class HabitsViewController: UIViewController {
     private func uiModeSetup(_ mode: Mode) {
         switch mode {
         case .create:
-            newHabbitLabel.text = "Новая привычка"
-            createButton.setTitle("Создать", for: .normal)
+            newHabbitLabel.text = NSLocalizedString("new_habit", comment: "HabitsViewController")
+            createButton.setTitle(NSLocalizedString("done_button", comment: "HabitsViewController"), for: .normal)
             
         case .edit(let tracker):
             newHabbitLabel.text = "Редактирование привычки"
