@@ -20,6 +20,9 @@ final class OnboardingViewControllers: UIPageViewController {
     let secondPage = OnboardingPage(title: "Даже если это не литры воды и йога",
                                     image: UIImage(resource: .backSecond))
     
+    var onCompletion: (() -> Void)?
+    weak var window: UIWindow?
+    
     private lazy var pages: [UIViewController] = {
         let firstVC = createViewControllers(firstPage)
         let secondVC = createViewControllers(secondPage)
@@ -55,6 +58,7 @@ final class OnboardingViewControllers: UIPageViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        self.window = view.window
         dataSource = self
         delegate = self
         
@@ -119,11 +123,13 @@ final class OnboardingViewControllers: UIPageViewController {
     }
     
     private func openMainScreen() {
-        let trackerViewController = TrackerViewController()
-        let navigationController = UINavigationController(rootViewController: trackerViewController)
-        navigationController.modalPresentationStyle = .fullScreen
         AppSettings.isFirstAppOpen = false
-        present(navigationController, animated: true)
+        
+        if let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate {
+            sceneDelegate.showMainTabBar()
+            onCompletion?()
+            return
+        }
     }
 }
 

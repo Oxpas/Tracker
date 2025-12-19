@@ -25,33 +25,51 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     
     
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let windowScene = (scene as? UIWindowScene) else { return }
-        window = UIWindow(windowScene: windowScene)
-        
-        let tabBarController = TabBarController()
-        
-        // Находим TrackerViewController в TabBarController и передаем stores
-        if let navController = tabBarController.viewControllers?.first as? UINavigationController,
-           let trackerVC = navController.viewControllers.first as? TrackerViewController {
-            trackerVC.trackerStore = trackerStore
-            trackerVC.trackerRecordStore = trackerRecordStore
+            guard let windowScene = (scene as? UIWindowScene) else { return }
+            window = UIWindow(windowScene: windowScene)
+            
+            if UserDefaults.standard.object(forKey: "isFirstAppOpen") == nil {
+                AppSettings.isFirstAppOpen = true
+            }
+            
+            window?.rootViewController = makeRootViewController()
+            window?.makeKeyAndVisible()
+
         }
         
-        if UserDefaults.standard.object(forKey: "isFirstAppOpen") == nil {
-            AppSettings.isFirstAppOpen = true
+        private func makeRootViewController() -> UIViewController {
+            if AppSettings.isFirstAppOpen {
+                let onboardingVC = OnboardingViewControllers()
+                window?.rootViewController = onboardingVC
+                return onboardingVC
+            } else {
+                return makeTabBarController()
+            }
         }
         
-        if AppSettings.isFirstAppOpen {
-            window?.rootViewController = OnboardingViewControllers()
-        } else {
-            window?.rootViewController = TabBarController()
+        func showMainTabBar() {
+            let tabBarController = makeTabBarController()
+            
+            UIView.transition(with: window!, duration: 0.3, options: .transitionCrossDissolve, animations: { [weak self] in
+                self?.window?.rootViewController = tabBarController
+            }, completion: nil)
         }
         
-        window?.makeKeyAndVisible()
-    }
+        private func makeTabBarController() -> UITabBarController {
+            let tabBarController = TabBarController()
+            
+            tabBarController.trackerStore = trackerStore
+            tabBarController.trackerRecordStore = trackerRecordStore
+            
+            tabBarController.loadViewIfNeeded()
+            
+            print("✅ TabBarController создан с зависимостями")
+            print("📊 Передан trackerStore: \(trackerStore)")
+            
+            return tabBarController
+        }
+    
+
     
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.

@@ -118,11 +118,7 @@ final class StatisticViewController: UIViewController {
     private func updatePlaceholderVisible() {
         let hasTrackers = trackerStore?.fetchTrackers().count
         
-        if hasTrackers == 0 {
-            placeholderView.isHidden = false
-        } else {
-            placeholderView.isHidden = true
-        }
+        placeholderView.isHidden = hasTrackers != 0
     }
     
     private func createCardStack(number: Int, text: String) -> UIView {

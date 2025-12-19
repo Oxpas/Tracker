@@ -46,7 +46,7 @@ final class TrackerViewController: UIViewController {
         return picker
         
         
-
+        
     }()
     
     private lazy var titleLabel: UILabel = {
@@ -123,7 +123,7 @@ final class TrackerViewController: UIViewController {
         button.backgroundColor = UIColor(resource: .redCell)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.layer.cornerRadius = 16
-        button.isHidden = false
+        button.isHidden = true
         
         button.addAction(UIAction { [weak self] _ in
             self?.filterButtonTapped()
@@ -165,6 +165,9 @@ final class TrackerViewController: UIViewController {
         
         placeholderVisible()
         
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.updateFilterButtonVisibility()
+        }
         
         search.delegate = self
     }
@@ -214,7 +217,8 @@ final class TrackerViewController: UIViewController {
     }
     
     private func updateFilterButtonVisibility() {
-            guard let trackerStore = trackerStore else { return }
+        guard let trackerStore = trackerStore else { return }
+            
             let allTrackersForDate = trackerStore.fetchTrackers(for: currentDate)
             let hasAnyTrackersForDate = allTrackersForDate.contains { !$0.trackers.isEmpty }
             
@@ -228,10 +232,13 @@ final class TrackerViewController: UIViewController {
             let frameHeight = scrollView.frame.height
             let contentOffsetY = scrollView.contentOffset.y
             
+            let isContentSmallerThanFrame = contentHeight <= frameHeight
             let isScrolledToBottom = contentOffsetY + frameHeight >= contentHeight - 20
+
+            let shouldShowButton = isContentSmallerThanFrame || !isScrolledToBottom
             
             UIView.animate(withDuration: 0.3) { [weak self] in
-                self?.filterButton.isHidden = isScrolledToBottom
+                self?.filterButton.isHidden = !shouldShowButton
             }
     }
     
@@ -333,8 +340,8 @@ final class TrackerViewController: UIViewController {
         placeholderVisible()
         
         
-        DispatchQueue.main.async { [weak self] in
-            self?.updateFilterButtonVisibility()
+        DispatchQueue.main.async {
+            self.updateFilterButtonVisibility()
         }
         
     }
