@@ -7,7 +7,7 @@
 import UIKit
 
 protocol ScheduleSelectionDelegate: AnyObject {
-    func didSelecteWeekdays(_ schedule: [Weekdays])
+    func didSelectWeekdays(_ schedule: [Weekdays])
 }
 
 final class ScheduleViewController: UIViewController {
@@ -39,7 +39,8 @@ final class ScheduleViewController: UIViewController {
         let button = UIButton()
         button.setTitle("Готово", for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        button.backgroundColor = UIColor(named: "YP BlackDay")
+        button.backgroundColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
+        button.setTitleColor(traitCollection.userInterfaceStyle == .light ? .white : .ypBlackDay, for: .normal)
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         
@@ -52,7 +53,7 @@ final class ScheduleViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         
         setupUI()
         
@@ -87,7 +88,7 @@ final class ScheduleViewController: UIViewController {
     }
     
     private func doneButtonTapped() {
-        delegate?.didSelecteWeekdays(selectedDays)
+        delegate?.didSelectWeekdays(selectedDays)
         dismiss(animated: true)
     }
 }

@@ -7,10 +7,11 @@
 import UIKit
 
 final class HeaderView: UICollectionReusableView {
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 19, weight: .bold)
-        label.textColor = .black
+        label.textColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -36,5 +37,6 @@ final class HeaderView: UICollectionReusableView {
     
     func configure(with title: String) {
         titleLabel.text = title
+        titleLabel.textColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
     }
 }

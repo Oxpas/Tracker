@@ -14,6 +14,7 @@ protocol TrackerStoreDelegate: AnyObject {
 
 final class TrackerStore: NSObject {
     
+    
     private let colorMarshalling = ColorMarshalling()
     weak var delegate: TrackerStoreDelegate?
     
@@ -154,6 +155,32 @@ final class TrackerStore: NSObject {
             context.delete(trackerToDelete)
             CoreDataStore.shared.saveContext()
         }
+    }
+    
+    func updateTracker(_ tracker: Tracker, categoryTitle: String) throws {
+        guard context.persistentStoreCoordinator != nil else {
+            throw NSError(domain: "TrackerStore", code: -1, userInfo: [NSLocalizedDescriptionKey: "Контекст Core Data не готов"])
+        }
+        
+        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        
+        let results = try context.fetch(fetchRequest)
+        guard let trackerCoreData = results.first else {
+            throw NSError(domain: "TrackerStore", code: -2, userInfo: [NSLocalizedDescriptionKey: "Трекер не найден"])
+        }
+        
+        trackerCoreData.name = tracker.name
+        trackerCoreData.color = colorMarshalling.hexString(from: tracker.color)
+        trackerCoreData.emoji = tracker.emoji
+        
+        let scheduleData = try? NSKeyedArchiver.archivedData(withRootObject: tracker.schedule.map { $0.rawValue }, requiringSecureCoding: false)
+        trackerCoreData.schedule = scheduleData
+        
+        let category = try trackerCategoryStore.fetchOrCreateCategory(with: categoryTitle)
+        trackerCoreData.category = category
+        
+        CoreDataStore.shared.saveContext()
     }
 }
 

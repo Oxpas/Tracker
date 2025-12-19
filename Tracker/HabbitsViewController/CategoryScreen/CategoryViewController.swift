@@ -7,7 +7,7 @@ protocol CategorySelectionDelegate: AnyObject {
 final class CategoryViewController: UIViewController {
     
     weak var delegate: CategorySelectionDelegate?
-    private var viewModel: CategoryViewModel!
+    private var viewModel: CategoryViewModel?
     
     var initiallySelectedCategory: String?
     
@@ -17,8 +17,6 @@ final class CategoryViewController: UIViewController {
         tableView.register(CategoryTableViewCell.self, forCellReuseIdentifier: CategoryTableViewCell.identifier)
         tableView.layer.cornerRadius = 16
         tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        tableView.tableFooterView = UIView()
         
         return tableView
     }()
@@ -69,8 +67,8 @@ final class CategoryViewController: UIViewController {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Добавить категорию", for: .normal)
         button.layer.cornerRadius = 16
-        button.backgroundColor = UIColor(resource: .ypBlackDay)
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
+        button.setTitleColor(traitCollection.userInterfaceStyle == . light ? .white : .black, for: .normal)
         
         button.addTarget(self, action: #selector(buttonAddCategoryTapped), for: .touchUpInside)
         
@@ -79,15 +77,15 @@ final class CategoryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         setupBindings()
         setupUI()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        viewModel.setInitiallySelectedCategory(initiallySelectedCategory)
-        viewModel.loadCategories()
+        viewModel?.setInitiallySelectedCategory(initiallySelectedCategory)
+        viewModel?.loadCategories()
     }
     
     func configure(trackerCategoryStore: TrackerCategoryStore) {
@@ -97,23 +95,29 @@ final class CategoryViewController: UIViewController {
     private func setupBindings() {
         guard viewModel != nil else { return }
         
-        viewModel.onCategoriesUpdated = { [weak self] in
+        viewModel?.onCategoriesUpdated = { [weak self] in
             DispatchQueue.main.async {
                 self?.tableView.reloadData()
                 self?.updatePlaceholderVisibility()
             }
         }
         
-        viewModel.onErrorOccurred = { [weak self] errorMessage in
+        viewModel?.onErrorOccurred = { [weak self] errorMessage in
             DispatchQueue.main.async {
                 self?.showErrorAlert(message: errorMessage)
             }
         }
         
-        viewModel.onCategorySelected = { [weak self] category in
+        viewModel?.onCategorySelected = { [weak self] category in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self?.delegate?.didCategorySelect(category)
                 self?.dismiss(animated: true)
+            }
+        }
+        
+        viewModel?.onCategoryEditing = { [weak self] oldCategoryTitle in
+            DispatchQueue.main.async {
+                self?.showEditCategoryScreen(oldCategoryTitle: oldCategoryTitle)
             }
         }
     }
@@ -133,10 +137,10 @@ final class CategoryViewController: UIViewController {
     
     private func setupConstraints() {
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            tableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -47),
+            tableView.bottomAnchor.constraint(equalTo: addCategoryButton.topAnchor, constant: -16),
             
             nameLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: -32),
             nameLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -168,9 +172,16 @@ final class CategoryViewController: UIViewController {
     }
     
     @objc private func buttonAddCategoryTapped() {
-        let createNewCategoryViewController = CreateNewCategoryViewController()
+        let createNewCategoryViewController = CreateNewCategoryViewController(mode: .create)
         createNewCategoryViewController.delegate = self
         let navigationController = UINavigationController(rootViewController: createNewCategoryViewController)
+        present(navigationController, animated: true)
+    }
+    
+    private func showEditCategoryScreen(oldCategoryTitle: String) {
+        let editCategoryViewController = CreateNewCategoryViewController(mode: .edit(oldCategoryTitle))
+        editCategoryViewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: editCategoryViewController)
         present(navigationController, animated: true)
     }
 }
@@ -178,6 +189,7 @@ final class CategoryViewController: UIViewController {
 // MARK: - UITableViewDataSource
 extension CategoryViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        guard let viewModel else { return 0 }
         return viewModel.getNumberOfCategories()
     }
     
@@ -189,15 +201,11 @@ extension CategoryViewController: UITableViewDataSource {
             return UITableViewCell()
         }
         
+        guard let viewModel else { return UITableViewCell() }
+        
         if let categoryTitle = viewModel.getCategoryTitle(at: indexPath.row) {
             cell.configure(with: categoryTitle)
             cell.setSelected(viewModel.isCategorySelected(at: indexPath.row))
-        }
-        
-        if indexPath.row == viewModel.getNumberOfCategories() - 1 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        } else {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
         
         return cell
@@ -212,14 +220,61 @@ extension CategoryViewController: UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        viewModel.selectCategory(at: indexPath.row)
+        viewModel?.selectCategory(at: indexPath.row)
+    }
+    
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        let numberOfRows = tableView.numberOfRows(inSection: indexPath.section)
+        
+        if indexPath.row == numberOfRows - 1 {
+            cell.layer.cornerRadius = 16
+            cell.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+            cell.layer.masksToBounds = true
+        } else {
+            cell.layer.cornerRadius = 0
+            cell.layer.masksToBounds = false
+        }
+    }
+    
+    func tableView(
+        _ tableView: UITableView,
+        contextMenuConfigurationForRowAt indexPath: IndexPath,
+        point: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        
+        return UIContextMenuConfiguration(
+            identifier: nil,
+            previewProvider: nil
+        ) { _ in
+            let edit = UIAction(
+                title: "Редактировать"
+            ) { [weak self] _ in
+                self?.viewModel?.editCategory(at: indexPath)
+            }
+            
+            let delete = UIAction(
+                title: "Удалить",
+                attributes: .destructive
+            ) { [weak self] _ in
+                self?.viewModel?.deleteCategory(at: indexPath)
+            }
+            
+            return UIMenu(title: "", children: [edit, delete])
+        }
     }
 }
 
 // MARK: - CreateNewCategoryViewControllerProtocol
 extension CategoryViewController: CreateNewCategoryViewControllerProtocol {
-    func didTapDoneButton(_ categoryName: String?) {
+    func didTapDoneButton(_ categoryName: String?, mode: CreateNewCategoryViewController.Mode) {
         guard let categoryName = categoryName, !categoryName.isEmpty else { return }
-        viewModel.createCategory(with: categoryName)
+        
+        switch mode {
+        case .create:
+            viewModel?.createCategory(with: categoryName)
+            
+        case .edit(let oldTitle):
+            viewModel?.updateCategory(oldTitle: oldTitle, newTitle: categoryName)
+        }
     }
 }

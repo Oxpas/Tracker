@@ -30,7 +30,7 @@ final class TrackerCell: UICollectionViewCell {
         return label
     }()
     
-    private lazy var day: UILabel = {
+    lazy var day: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         label.textColor = UIColor(named: "YP BlackDay")
@@ -115,6 +115,7 @@ final class TrackerCell: UICollectionViewCell {
         
         let dayString = nameOfDaysFormatter(count: completedDays)
         day.text = dayString
+        day.textColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : .white
         
         updateCompleteButton(isCompletedToday: isCompletedToday, color: tracker.color)
         
@@ -122,16 +123,9 @@ final class TrackerCell: UICollectionViewCell {
     }
     
     private func nameOfDaysFormatter(count: Int) -> String {
-        let remainder10 = count % 10
-        let remainder100 = count % 100
+        let format = NSLocalizedString("days_count", comment: "Name of days")
         
-        if remainder10 == 1 && remainder100 != 11 {
-            return "\(count) день"
-        } else if remainder10 >= 2 && remainder10 <= 4 && (remainder100 < 10 || remainder100 >= 20) {
-            return "\(count) дня"
-        } else {
-            return "\(count) дней"
-        }
+        return String.localizedStringWithFormat(format, count)
     }
     
     func updateCompleteButton(isCompletedToday: Bool, color: UIColor) {

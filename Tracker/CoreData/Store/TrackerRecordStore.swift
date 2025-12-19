@@ -102,4 +102,102 @@ final class TrackerRecordStore {
             return false
         }
     }
+    
+    func perfectDaysCount() -> Int {
+        
+        let trackerStore = DataService.shared.trackerStore
+        
+        let allTrackers = trackerStore.fetchTrackers()
+        
+        guard !allTrackers.isEmpty else { return 0 }
+        
+        let allRecords = fetchCompletedTrackers()
+        
+        let calendar = Calendar.current
+        var perfectDaysCount = 0
+        
+        var trackersByDate: [Date: Set<UUID>] = [:]
+        
+        for record in allRecords {
+            let date = calendar.startOfDay(for: record.date)
+            if trackersByDate[date] == nil {
+                trackersByDate[date] = []
+            }
+            trackersByDate[date]?.insert(record.trackerID)
+        }
+        
+        for (date, completedTrackerIds) in trackersByDate {
+            let scheduledTrackers = allTrackers.filter { tracker in
+                let weekdayComponent = calendar.component(.weekday, from: date)
+                guard let targetWeekday = Weekdays(calendarWeekday: weekdayComponent) else {
+                    return false
+                }
+                return tracker.schedule.contains(targetWeekday)
+            }
+            
+            if !scheduledTrackers.isEmpty {
+                let allCompleted = scheduledTrackers.allSatisfy { tracker in
+                    completedTrackerIds.contains(tracker.id)
+                }
+                
+                if allCompleted {
+                    perfectDaysCount += 1
+                }
+            }
+        }
+        
+        return perfectDaysCount
+    }
+    
+    func longestStreak() -> Int {
+        let allRecords = fetchCompletedTrackers()
+        
+        guard !allRecords.isEmpty else { return 0 }
+        
+        let sortedDates = allRecords.map { $0.date }.sorted()
+        
+        var longestStreak = 1
+        var currentStreak = 1
+        
+        for i in 1..<sortedDates.count {
+            let previousDate = sortedDates[i-1]
+            let currentDate = sortedDates[i]
+            
+            if Calendar.current.isDate(previousDate, inSameDayAs: currentDate) {
+                continue
+            }
+            
+            if let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: previousDate),
+               Calendar.current.isDate(nextDay, inSameDayAs: currentDate) {
+                currentStreak += 1
+                longestStreak = max(longestStreak, currentStreak)
+            } else {
+                currentStreak = 1
+            }
+        }
+        
+        return longestStreak
+    }
+    
+    func averageTrackersPerDay() -> Int {
+        let allRecords = fetchCompletedTrackers()
+        
+        guard !allRecords.isEmpty else { return 0 }
+        
+        let calendar = Calendar.current
+        
+        var trackersPerDay: [Date: Int] = [:]
+        
+        for record in allRecords {
+            let date = calendar.startOfDay(for: record.date)
+            trackersPerDay[date, default: 0] += 1
+        }
+        
+        let totalTrackers = allRecords.count
+        let totalDays = trackersPerDay.keys.count
+        
+        guard totalDays > 0 else { return 0 }
+        
+        return totalTrackers / totalDays
+    }
 }

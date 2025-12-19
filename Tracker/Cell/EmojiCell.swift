@@ -55,9 +55,11 @@ final class EmojiCell: UICollectionViewCell {
     
     func setSelected(_ isSelected: Bool) {
         if isSelected {
-            emojiContainer.backgroundColor = UIColor.lightGray.withAlphaComponent(0.3)
+            emojiContainer.backgroundColor = traitCollection.userInterfaceStyle == .light ? UIColor.lightGray.withAlphaComponent(0.3) : .white
         } else {
             emojiContainer.backgroundColor = .clear
         }
     }
 }
+
+

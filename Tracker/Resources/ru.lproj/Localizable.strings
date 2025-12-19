@@ -1,0 +1,30 @@
+/* TabBarController */
+"trackers_tab" = "Трекеры";
+"statistics_tab" = "Статистика";
+
+/* TrackerViewController */
+"trackers_label" = "Трекеры";
+"text_placeholer" = "Что будем отслеживать?";
+"search_field" = "Поиск";
+"filter_button" = "Фильтры";
+"found_nothing" = "Ничего не найдено";
+
+/* StatisticViewController */
+"statistics_label" = "Статистика";
+"statistic_text_placeholder" = "Анализировать пока нечего";
+"trackers_done" = "Трекеров завершено";
+"perfect_days" = "Идеальные дни";
+"best_period" = "Лучший период";
+"average_value" = "Среднее значение";
+"statistics_placeholder" = "Анализировать пока нечего";
+
+/* DaysNameCounter */
+"days_count" = "%d дней";
+
+/* HabitsViewController */
+"new_habit" = "Новая привычка";
+"category_label" = "Категория";
+"schedule_label" = "Расписание";
+"color_label" = "Цвет";
+"cancel_button" = "Отменить";
+"done_button" = "Создать";

@@ -8,10 +8,26 @@
 import UIKit
 
 protocol CreateNewCategoryViewControllerProtocol: AnyObject {
-    func didTapDoneButton(_ categoryName: String?)
+    func didTapDoneButton(_ categoryName: String?, mode: CreateNewCategoryViewController.Mode)
 }
 
 final class CreateNewCategoryViewController: UIViewController {
+    
+    enum Mode {
+        case create
+        case edit(String)
+    }
+    
+    private let mode: Mode
+    
+    init(mode: Mode) {
+        self.mode = mode
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     weak var delegate: CreateNewCategoryViewControllerProtocol?
     
@@ -20,7 +36,13 @@ final class CreateNewCategoryViewController: UIViewController {
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Новая категория"
+        
+        switch mode {
+        case .create:
+            label.text = "Новая категория"
+        case .edit:
+            label.text = "Редактирование категории"
+        }
         
         return label
     }()
@@ -29,8 +51,9 @@ final class CreateNewCategoryViewController: UIViewController {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle("Готово", for: .normal)
+        button.setTitleColor(traitCollection.userInterfaceStyle == .light ? .white : .ypBlackDay, for: .normal)
         button.layer.cornerRadius = 16
-        button.backgroundColor = UIColor(resource: .ypBlackDay)
+        button.backgroundColor = traitCollection.userInterfaceStyle == .light ? .white : .ypBlackDay
         
         button.addAction(UIAction { [weak self] _ in
             self?.didTapDoneButton()
@@ -43,7 +66,7 @@ final class CreateNewCategoryViewController: UIViewController {
         let textField = UITextField()
         textField.placeholder = "Введите название категории"
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.backgroundColor = UIColor(named: "YP Background")
+        textField.backgroundColor = UIColor(resource: .ypBackground)
         textField.layer.cornerRadius = 16
         
         let leftPadding = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: textField.frame.height))
@@ -73,11 +96,12 @@ final class CreateNewCategoryViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         
         setupUI()
         setupConstraints()
         updateCreateButtonEnable()
+        configureForMode()
     }
     
     private func setupUI() {
@@ -85,6 +109,14 @@ final class CreateNewCategoryViewController: UIViewController {
         view.addSubview(categoryName)
         view.addSubview(addCategoryButton)
         view.addSubview(clearButton)
+    }
+    
+    private func configureForMode() {
+        if case .edit(let oldTitle) = mode {
+            categoryName.text = oldTitle
+            textChanged()
+            categoryName.becomeFirstResponder()
+        }
     }
     
     private func setupConstraints() {
@@ -116,11 +148,13 @@ final class CreateNewCategoryViewController: UIViewController {
     
     private func updateCreateButtonEnable() {
         let isCategoryNameEmpty = categoryName.text?.isEmpty ?? true
-
+        
         let buttonIsReadyToUse = !isCategoryNameEmpty
         
+        let backgroundColor = traitCollection.userInterfaceStyle == .light ? .ypBlackDay : UIColor(resource: .ypLightGray)
+        
         addCategoryButton.isEnabled = buttonIsReadyToUse
-        addCategoryButton.backgroundColor = buttonIsReadyToUse ? .black : .ypGray
+        addCategoryButton.backgroundColor = buttonIsReadyToUse ? backgroundColor : .ypGray
     }
     
     private func updateClearButtonVisible() {
@@ -132,15 +166,43 @@ final class CreateNewCategoryViewController: UIViewController {
         categoryName.text = ""
         textChanged()
         
-        if categoryName.isFirstResponder {
-            
-        } else {
+        if !categoryName.isFirstResponder {
             categoryName.becomeFirstResponder()
         }
     }
     
     private func didTapDoneButton() {
-        delegate?.didTapDoneButton(categoryName.text ?? nil)
+        let newCategoryName = categoryName.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        
+        guard !newCategoryName.isEmpty else {
+            showAlert(
+                title: "Ошибка",
+                message: "Название категории не может быть пустым"
+            )
+            return
+        }
+        
+        if case .edit(let oldTitle) = mode {
+            if newCategoryName == oldTitle {
+                dismiss(animated: true)
+                return
+            }
+        }
+        
+        delegate?.didTapDoneButton(newCategoryName, mode: mode)
         dismiss(animated: true)
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alert.addAction(okAction)
+        
+        present(alert, animated: true)
     }
 }
