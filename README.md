@@ -4,6 +4,13 @@
 
 [Дизайн Figma](https://www.figma.com/design/owAO4CAPTJdpM1BZU5JHv7/Tracker)
 
+## **Скриншоты приложения**
+
+
+<p float="left">
+  <img src="Tracker/Resources/Screenshots/299shots_so.png"/>
+</p>
+
 # Назначение и цели приложения
 
 Приложение помогает пользователям формировать полезные привычки и контролировать их выполнение.
